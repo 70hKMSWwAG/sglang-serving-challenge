@@ -210,9 +210,10 @@ Latency  : avg=25574.7ms  p50=23812.2ms  p90=44506.9ms
 [2026-09-26 10:51:24] Prefill batch, #new-seq: 2, #new-token: 769,  #cached-token: 1279, #running-req: 6, ...
 ```
 
-全程 **38 个 prefill 批次中 29 个命中，占比 76.3%**；命中长度常见 256
-（即共享前缀长度），亦出现 1023/1024（整段 prompt 已被缓存）。
-同时可见 prefill 输入吞吐约 **360~420 tok/s**。
+全程 **38 个 prefill 批次中 29 个命中，占比 76.3%**；命中长度以 256
+（即共享前缀长度）与 1023/1024（整段 prompt 已被缓存）为主。
+同时可见：大批次（`#new-token ≥ 600`，共 12 个）时服务端自报 prefill 输入吞吐
+**214~423 tok/s**；小批次的瞬时值受日志 1 秒时间粒度限制，不具参考意义。
 
 ### 服务端关键配置（启动日志）
 
@@ -243,7 +244,7 @@ Tree cache initialized: source=default impl=RadixCache ...
 ├── tools/                 跨平台工具
 │   ├── fetch_all.py           预取大文件（让 WSL 侧离线可构建）
 │   ├── make_shot.py           终端文本 → 截图 PNG（自适应高度 + 自动裁剪）
-│   └── make_ops_pdf.py        截图 → A4 PDF
+│   └── make_ops_pdf.py        截图 → A4 PDF（早期 PyMuPDF 拼接方案；正式交付件由 report/src/操作保存.html 渲染）
 ├── report/src/            全部 PDF 的 HTML 源文件（可复现）
 └── evidence/              原始证据：日志、指标、截图、逐请求结果
 ```
@@ -253,5 +254,9 @@ Tree cache initialized: source=default impl=RadixCache ...
 ## 9. 说明
 
 - 所有日志、指标与截图**均取自真实运行过程**，未做人工改写或美化。
+- `evidence/shot1.txt`（截图1 的文本来源）与 `evidence/shot1_raw.txt`（`03_single_request.sh` 的原始落盘）
+  **并非同一次调用**：前者由 `06_make_shots.sh` 在汇编时另发起一次真实 HTTP 请求并摘要关键字段生成，
+  因此二者的 `id` 与 `usage` 不同（`completion_tokens` 256 vs 250，源于采样随机性以及是否触达
+  `max_tokens` 上限——256 那次 `finish_reason=length`，250 那次 `stop`）。两处都是真实响应，无人工编造。
 - `wsl/` 下所有脚本为 **LF 换行**（`.gitattributes` 已固化），避免 `bad interpreter: ^M`。
 - 压测的实测原始数据见 `evidence/benchmark_results.csv` / `.json`。
