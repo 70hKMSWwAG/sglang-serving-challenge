@@ -1,0 +1,12 @@
+# 统一换行符：shell 脚本与 Python 必须为 LF，避免 bad interpreter: ^M
+*.sh   text eol=lf
+*.py   text eol=lf
+*.html text eol=lf
+*.md   text eol=lf
+*.json text eol=lf
+*.csv  text eol=lf
+*.txt  text eol=lf
+
+# 二进制文件不做换行转换
+*.pdf  binary
+*.png  binary

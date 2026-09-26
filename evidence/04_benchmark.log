@@ -1,0 +1,69 @@
+==============================================================================
+Mooncake FAST'25 trace 采样 + Poisson 到达 workload
+==============================================================================
+trace 文件     : /mnt/d/first-task/data/mooncake_trace.jsonl
+trace 记录总数 : 23608
+采样条数       : 20  (seed=2026)
+语料 token 数  : 6120  (需要 >= 1024)
+泊松到达       : λ = 0.5000 req/s (平均间隔 2.00s)，总到达跨度 58.8s
+输入长度区间   : 917 ~ 1024 tokens
+输出长度区间   : 8 ~ 64 tokens
+公共前缀       : 256 tokens（对应 trace 的 hash_ids[0] 共享前缀）
+
+[warmup 1] status=200 ttft=193ms latency=1042ms err=None
+  [ 1/20] req#7  in=1024  out=23   status=ok      ttft=5307.2ms  lat=18536.7ms
+  [ 2/20] req#2  in=1024  out=25   status=ok      ttft=3952.1ms  lat=27872.6ms
+  [ 3/20] req#8  in=1024  out=24   status=ok      ttft=1156.2ms  lat=13746.0ms
+  [ 4/20] req#10 in=1024  out=29   status=ok      ttft=955.5ms  lat=11786.0ms
+  [ 5/20] req#1  in=1024  out=64   status=ok      ttft=2294.7ms  lat=49072.9ms
+  [ 6/20] req#0  in=1024  out=64   status=ok      ttft=3700.5ms  lat=52469.0ms
+  [ 7/20] req#3  in=917   out=64   status=ok      ttft=2169.6ms  lat=44506.9ms
+  [ 8/20] req#4  in=1024  out=64   status=ok      ttft=2374.1ms  lat=43307.3ms
+  [ 9/20] req#6  in=1024  out=64   status=ok      ttft=5883.7ms  lat=40557.9ms
+  [10/20] req#5  in=1024  out=64   status=ok      ttft=3449.2ms  lat=41029.9ms
+  [11/20] req#13 in=1024  out=8    status=ok      ttft=1521.3ms  lat=7844.3ms
+  [12/20] req#16 in=1024  out=8    status=ok      ttft=1066.7ms  lat=4986.6ms
+  [13/20] req#9  in=1024  out=64   status=ok      ttft=672.2ms  lat=33193.3ms
+  [14/20] req#18 in=1024  out=8    status=ok      ttft=639.3ms  lat=3812.8ms
+  [15/20] req#15 in=1024  out=24   status=ok      ttft=1045.8ms  lat=12051.7ms
+  [16/20] req#19 in=1024  out=41   status=ok      ttft=808.3ms  lat=11609.2ms
+  [17/20] req#11 in=1024  out=64   status=ok      ttft=1060.5ms  lat=25836.4ms
+  [18/20] req#14 in=1024  out=64   status=ok      ttft=1414.1ms  lat=23812.2ms
+  [19/20] req#12 in=1024  out=64   status=ok      ttft=1680.4ms  lat=24803.3ms
+  [20/20] req#17 in=1024  out=64   status=ok      ttft=1119.2ms  lat=20658.2ms
+
+========================================================================================================
+Mooncake trace 采样 workload — 逐请求结果
+========================================================================================================
+  # arrive(s)  in_tok out_tok   status  TTFT(ms)  latency(ms)
+--------------------------------------------------------------------------------------------------------
+  0      0.23    1024      64       ok    3700.5      52469.0
+  1      3.63    1024      64       ok    2294.7      49072.9
+  2      4.82    1024      25       ok    3952.1      27872.6
+  3      8.20     917      64       ok    2169.6      44506.9
+  4     10.51    1024      64       ok    2374.1      43307.3
+  5     12.78    1024      64       ok    3449.2      41029.9
+  6     13.25    1024      64       ok    5883.7      40557.9
+  7     13.83    1024      23       ok    5307.2      18536.7
+  8     21.65    1024      24       ok    1156.2      13746.0
+  9     26.95    1024      64       ok     672.2      33193.3
+ 10     30.22    1024      29       ok     955.5      11786.0
+ 11     46.17    1024      64       ok    1060.5      25836.4
+ 12     47.61    1024      64       ok    1680.4      24803.3
+ 13     47.77    1024       8       ok    1521.3       7844.3
+ 14     48.60    1024      64       ok    1414.1      23812.2
+ 15     50.23    1024      24       ok    1045.8      12051.7
+ 16     50.92    1024       8       ok    1066.7       4986.6
+ 17     52.15    1024      64       ok    1119.2      20658.2
+ 18     56.33    1024       8       ok     639.3       3812.8
+ 19     58.76    1024      41       ok     808.3      11609.2
+--------------------------------------------------------------------------------------------------------
+采样来源 : Mooncake FAST'25  arxiv-trace/mooncake_trace.jsonl (共 23608 条，随机采样 20 条, seed=2026)
+到达过程 : Poisson, λ=0.5000 req/s (平均间隔 2.00s)
+公共前缀 : 256 tokens（模拟 trace 中共享的 hash_ids[0]，触发 RadixCache 复用）
+成功率   : 20/20 = 100.0%   总墙钟 72.8s   输出吞吐 12.28 tok/s
+TTFT(ms) : avg=2113.5  p50=1414.1  p90=3952.1  min=639.3  max=5883.7
+Latency  : avg=25574.7ms  p50=23812.2ms  p90=44506.9ms
+========================================================================================================
+结果已保存: /mnt/d/first-task/work/results/benchmark_results.json
+          /mnt/d/first-task/work/results/benchmark_results.csv

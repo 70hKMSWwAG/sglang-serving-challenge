@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>流程图.pdf</title>
+<style>
+  @page { size: A4 portrait; margin: 9mm 8mm; }
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Microsoft YaHei","微软雅黑","PingFang SC",sans-serif;
+    color: #0f172a; background: #fff; font-size: 12.5px; line-height: 1.4;
+  }
+  .page { width: 190mm; }
+  h1 { font-size: 20px; margin: 0 0 3px; letter-spacing: .3px; }
+  .sub { font-size: 12px; color: #64748b; margin: 0 0 9px; }
+  .rule { height: 2.5px; background: linear-gradient(90deg,#1d4ed8,#0ea5e9 45%,#e2e8f0); margin-bottom: 10px; }
+
+  .grid { display: grid; grid-template-columns: 55mm 8mm 1fr; align-items: stretch; }
+  .stage {
+    display: flex; align-items: center; gap: 7px;
+    border: 1px solid #c7d2fe; border-left: 4px solid #4f46e5; border-radius: 5px;
+    background: #f8faff; padding: 7px 9px; min-height: 46px;
+  }
+  .stage .no {
+    flex: 0 0 auto; width: 19px; height: 19px; border-radius: 50%;
+    background: #4f46e5; color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stage .tx { min-width: 0; }
+  .stage .nm { font-weight: 700; font-size: 12.2px; color: #1e293b; }
+  .stage .ds { font-size: 10.4px; color: #64748b; }
+
+  /* 与重点问题直接相关的环节 */
+  .stage.key { border-color: #fcd34d; border-left-color: #d97706; background: #fffbeb; }
+  .stage.key .no { background: #d97706; }
+  .stage.io  { border-color: #a7f3d0; border-left-color: #059669; background: #f0fdf4; }
+  .stage.io .no { background: #059669; }
+
+  .arrow { display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 13px; }
+  .anno {
+    display: flex; align-items: center; border: 1px dashed #e2e8f0; border-radius: 5px;
+    padding: 5px 10px; color: #475569; font-size: 11px; background: #fcfdfe; min-height: 46px;
+  }
+  .anno b { color: #b45309; }
+  .anno.g { color: #047857; }
+
+  .note {
+    margin-top: 11px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc;
+    padding: 9px 12px; font-size: 11.3px; color: #334155;
+  }
+  .note h2 { font-size: 12.8px; margin: 0 0 4px; color: #1e293b; }
+  .note ul { margin: 0; padding-left: 16px; }
+  .note li { margin: 3px 0; }
+  .lg { margin-top: 9px; font-size: 10.6px; color: #64748b; }
+  .lg span { display: inline-block; margin-right: 14px; }
+  .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>一次请求如何经过 SGLang 在线推理框架</h1>
+  <p class="sub">OpenAI-compatible serving pipeline（SGLang 0.5.14 / CPU 引擎实测路径）：从 HTTP 请求到流式输出的完整链路</p>
+  <div class="rule"></div>
+
+  <div class="grid">
+    <div class="stage"><span class="no">1</span><span class="tx"><span class="nm">Client 发起请求</span><br><span class="ds">POST /v1/chat/completions（JSON）</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno">OpenAI 兼容协议是"外部契约"，使客户端无需感知内部调度细节。</div>
+
+    <div class="stage"><span class="no">2</span><span class="tx"><span class="nm">API Server 接入</span><br><span class="ds">FastAPI 路由 · 鉴权 · 参数校验</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno">渲染 chat 模板；若 stream=true 则建立 SSE 长连接，为后续增量下发做准备。</div>
+
+    <div class="stage"><span class="no">3</span><span class="tx"><span class="nm">Tokenizer</span><br><span class="ds">文本 → token id 序列</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno">产出 input_length，是后续调度与显存预算的唯一计量单位。</div>
+
+    <div class="stage"><span class="no">4</span><span class="tx"><span class="nm">Scheduler / Request Queue</span><br><span class="ds">入队 · 组批 · continuous batching</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno">按 token 预算与 KV 预算动态组批：批越大吞吐越高，但在线场景受延迟约束。</div>
+
+    <div class="stage key"><span class="no">5</span><span class="tx"><span class="nm">RadixCache 前缀匹配</span><br><span class="ds">基数树上做最长公共前缀查找</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno"><b>★ 逻辑层 / prefix reuse：</b>RadixAttention 在此判定"这段前缀算过没有"，命中即跳到第 6 步的增量计算。</div>
+
+    <div class="stage key"><span class="no">6</span><span class="tx"><span class="nm">Prefill（extend）</span><br><span class="ds">仅对未命中部分做前向</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno"><b>★</b> 命中前缀的 KV 直接复用，prefill 只计算增量 token，这是 TTFT 下降的主要来源。</div>
+
+    <div class="stage key"><span class="no">7</span><span class="tx"><span class="nm">KV Cache 分配（page）</span><br><span class="ds">按固定大小 page/block 分配与回收</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno"><b>★ 物理层：</b>page-sized KV cache 决定 KV 以什么粒度存放与寻址，前缀复用能否发生取决于存储层是否支持共享。</div>
+
+    <div class="stage"><span class="no">8</span><span class="tx"><span class="nm">Decode 迭代</span><br><span class="ds">逐 token 自回归：读历史 KV → attention → 追加 KV</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno">每次迭代都要读取全部历史 KV，属 memory-bound；是 TPOT（每 token 延迟）的主要构成。</div>
+
+    <div class="stage"><span class="no">9</span><span class="tx"><span class="nm">Sampling</span><br><span class="ds">temperature / top-p / 约束解码</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno">从 logits 决定下一个 token；结构化输出约束（xgrammar）也作用于此。</div>
+
+    <div class="stage io"><span class="no">10</span><span class="tx"><span class="nm">Streaming 输出</span><br><span class="ds">增量 SSE 下发</span></span></div>
+    <div class="arrow">▼</div>
+    <div class="anno g">首个增量到达客户端的时刻即 TTFT；此后每个 token 的间隔即 TPOT。</div>
+
+    <div class="stage io"><span class="no">11</span><span class="tx"><span class="nm">Metrics / 可观测性</span><br><span class="ds">吞吐 · 缓存命中率 · 队列长度</span></span></div>
+    <div class="arrow" style="visibility:hidden">▼</div>
+    <div class="anno g">/metrics 暴露 Prometheus 指标，本次实验中用其读取前缀缓存命中率。</div>
+  </div>
+
+  <div class="lg">
+    <span><i class="sw" style="background:#4f46e5"></i>常规环节</span>
+    <span><i class="sw" style="background:#d97706"></i>与本次重点问题直接相关（RadixAttention / page-sized KV cache / prefix reuse）</span>
+    <span><i class="sw" style="background:#059669"></i>面向客户端的观测点</span>
+  </div>
+
+  <div class="note">
+    <h2>两条关键对应关系</h2>
+    <ul>
+      <li><b>page-sized KV cache</b> 对应第 <b>7</b> 步：它是 <b>存储层</b> 的物理单元——把 KV 切成固定大小的 page/block 来分配、共享与回收，解决的是"KV 怎么放、怎么不碎片化地放"。</li>
+      <li><b>prefix reuse</b> 对应第 <b>5→6</b> 步：它是 <b>调度/计算层</b> 的逻辑收益——RadixCache 负责"找到可复用的前缀"，其结果直接表现为 prefill 跳过、TTFT 降低。</li>
+      <li>两者是同一件事的两面：<b>没有可共享的 page 表示，前缀复用就无法落地；没有前缀复用，page 机制只是省显存</b>。RadixAttention 是把二者接起来的机制。</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

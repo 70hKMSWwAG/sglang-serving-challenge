@@ -1,0 +1,71 @@
+$ curl -s http://127.0.0.1:30000/v1/models | python -m json.tool
+{
+    "object": "list",
+    "data": [
+        {
+            "id": "/opt/sgl-workspace/models/Qwen3-0.6B",
+            "object": "model",
+            "created": 1790390946,
+            "owned_by": "sglang",
+            "root": "/opt/sgl-workspace/models/Qwen3-0.6B",
+            "parent": null,
+            "max_model_len": 40960
+        }
+    ]
+}
+
+$ curl -s http://127.0.0.1:30000/v1/chat/completions -H 'Content-Type: application/json' -d '{...}'
+{
+  "model": "Qwen/Qwen3-0.6B",
+  "messages": [
+    {"role": "system", "content": "You are a concise assistant."},
+    {"role": "user", "content": "用三句话说明 SGLang 的 RadixAttention 解决了什么问题。"}
+  ],
+  "temperature": 0.7,
+  "max_tokens": 256,
+  "stream": false
+}
+{
+    "id": "62fae61b1f754b5a99bbb365c590c574",
+    "object": "chat.completion",
+    "created": 1790390962,
+    "model": "Qwen/Qwen3-0.6B",
+    "choices": [
+        {
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": "<think>\n\u597d\u7684\uff0c\u7528\u6237\u8ba9\u6211\u7528\u4e09\u53e5\u8bdd\u8bf4\u660eSGLang\u7684RadixAttention\u89e3\u51b3\u4e86\u4ec0\u4e48\u95ee\u9898\u3002\u9996\u5148\uff0c\u6211\u9700\u8981\u56de\u5fc6\u4e00\u4e0bSGLang\u662f\u4ec0\u4e48\uff0c\u4ee5\u53caRadixAttention\u7684\u7279\u70b9\u3002RadixAttention\u662f\u57fa\u4e8e\u5206\u6bb5\u6ce8\u610f\u529b\u7684\uff0c\u53ef\u80fd\u89e3\u51b3\u7684\u662f\u5904\u7406\u957f\u5e8f\u5217\u6216\u4e0d\u540c\u957f\u5ea6\u5e8f\u5217\u7684\u95ee\u9898\u3002\n\n\u63a5\u4e0b\u6765\uff0c\u7528\u6237\u9700\u8981\u4e09\u53e5\u8bdd\uff0c\u6240\u4ee5\u5f97\u5148\u786e\u5b9a\u6bcf\u4e2a\u95ee\u9898\u3002\u7b2c\u4e00\u53e5\u53ef\u80fd\u8bb2\u5b83\u89e3\u51b3\u4e86\u5e8f\u5217\u957f\u5ea6\u4e0d\u4e00\u81f4\u7684\u95ee\u9898\uff0c\u6bd4\u5982\u4e0d\u540c\u957f\u5ea6\u7684\u8f93\u5165\u3002\u7b2c\u4e8c\u53e5\u53ef\u4ee5\u63d0\u5230\u5904\u7406\u5e76\u884c\u8ba1\u7b97\u7684\u95ee\u9898\uff0c\u56e0\u4e3a\u5206\u6bb5\u7ed3\u6784\u53ef\u4ee5\u62c6\u5206\u4efb\u52a1\u3002\u7b2c\u4e09\u53e5\u53ef\u80fd\u662f\u63d0\u5347\u4e86\u8ba1\u7b97\u6548\u7387\uff0c\u56e0\u4e3a\u5206\u6bb5\u7ed3\u6784\u51cf\u5c11\u4e86\u5197\u4f59\u3002\n\n\u8fd8\u8981\u6ce8\u610f\u7528\u8bcd\u7b80\u6d01\uff0c\u7b26\u5408\u7528\u6237\u8981\u6c42\u7684\u7b80\u6d01\u6027\u3002\u53ef\u80fd\u9700\u8981\u68c0\u67e5\u6709\u6ca1\u6709\u9057\u6f0f\u7684\u5173\u952e\u70b9\uff0c\u6bd4\u5982\u662f\u5426\u63d0\u5230\u4e86\u6a21\u578b\u7684\u7ed3\u6784\u6216\u8005\u4f18\u52bf\uff0c\u4f46\u7528\u6237\u53ea\u9700\u8981\u95ee\u9898\uff0c\u6240\u4ee5\u91cd\u70b9\u653e\u5728\u89e3\u51b3\u4ec0\u4e48\u95ee\u9898\u4e0a\u3002\u786e\u4fdd\u6bcf\u53e5\u8bdd\u90fd\u660e\u786e\uff0c\u6ca1\u6709\u5197\u4f59\u3002\n</think>\n\nSGLang\u7684RadixAttention\u901a\u8fc7\u5c06\u5e8f\u5217\u62c6\u5206\u4e3a\u591a\u4e2a\u5206\u6bb5\uff0c\u89e3\u51b3\u4e86\u957f\u5e8f\u5217\u5904\u7406\u65f6\u7684\u7ef4\u5ea6\u4e0d\u4e00\u81f4\u95ee\u9898\u3002\u5b83\u901a\u8fc7\u5206\u6bb5\u6ce8\u610f\u529b\u673a\u5236\uff0c\u6709\u6548\u5904\u7406\u4e86\u4e0d\u540c\u957f\u5ea6\u8f93\u5165\u5e8f\u5217\u7684\u5e76\u884c\u8ba1\u7b97\u9700\u6c42\u3002\u540c\u65f6\uff0c\u8fd9\u79cd\u8bbe\u8ba1\u4f7f\u5f97\u6a21\u578b\u5728\u5e76\u884c\u8ba1\u7b97\u4e0a\u5177\u6709\u66f4\u9ad8\u7684\u6548\u7387\uff0c\u663e\u8457\u63d0\u5347\u4e86\u8ba1\u7b97\u6027\u80fd\u3002",
+                "reasoning_content": null,
+                "tool_calls": null
+            },
+            "logprobs": null,
+            "finish_reason": "stop",
+            "matched_stop": 151645
+        }
+    ],
+    "usage": {
+        "prompt_tokens": 36,
+        "total_tokens": 286,
+        "completion_tokens": 250,
+        "prompt_tokens_details": null,
+        "reasoning_tokens": 0
+    },
+    "metadata": {
+        "weight_version": "default"
+    }
+}
+
+$ # 流式请求（用于观测 TTFT / 逐 token 输出）
+{"model":"Qwen/Qwen3-0.6B","messages":[{"role":"user","content":"Hello, what is prefix caching?"}],"max_tokens":64,"stream":true}
+data: {"id":"868eaf97182a45668150e45f6f7c8b64","object":"chat.completion.chunk","created":1790390962,"model":"Qwen/Qwen3-0.6B","choices":[{"index":0,"delta":{"reasoning_content":null,"role":"assistant","content":""},"logprobs":null,"finish_reason":null,"matched_stop":null}]}
+
+data: {"id":"868eaf97182a45668150e45f6f7c8b64","object":"chat.completion.chunk","created":1790390962,"model":"Qwen/Qwen3-0.6B","choices":[{"index":0,"delta":{"reasoning_content":null,"content":"<think>"},"logprobs":null,"finish_reason":null,"matched_stop":null}]}
+
+data: {"id":"868eaf97182a45668150e45f6f7c8b64","object":"chat.completion.chunk","created":1790390963,"model":"Qwen/Qwen3-0.6B","choices":[{"index":0,"delta":{"reasoning_content":null,"content":"\n"},"logprobs":null,"finish_reason":null,"matched_stop":null}]}
+
+data: {"id":"868eaf97182a45668150e45f6f7c8b64","object":"chat.completion.chunk","created":1790390963,"model":"Qwen/Qwen3-0.6B","choices":[{"index":0,"delta":{"reasoning_content":null,"content":"Okay"},"logprobs":null,"finish_reason":null,"matched_stop":null}]}
+
+data: {"id":"868eaf97182a45668150e45f6f7c8b64","object":"chat.completion.chunk","created":1790390963,"model":"Qwen/Qwen3-0.6B","choices":[{"index":0,"delta":{"reasoning_content":null,"content":","},"logprobs":null,"finish_reason":null,"matched_stop":null}]}
+
+data: {"id":"868eaf97182a45668150e45f6f7c8b64","object":"chat.completion.chunk","created":1790390963,"model":"Qwen/Qwen3-0.6B","choices":[{"index":0,"delta":{"reasoning_content"

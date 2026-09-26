@@ -1,0 +1,15 @@
+
+[1;36m[10:48:10][0m ==================== 阶段 2/5：启动服务 ====================
+
+[1;36m[10:48:11][0m 启动 Ray head（2.56.0）
+  [1;32m✓[0m Ray head 已启动
+  [1;32m✓[0m Ray 状态已记录
+
+[1;36m[10:48:14][0m 启动 SGLang 服务: /opt/sgl-workspace/models/Qwen3-0.6B
+
+[1;36m[10:48:14][0m   SGLANG_USE_CPU_ENGINE=1  LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libtcmalloc.so.4:/usr/lib/x86_64-linux-gnu/libtbbmalloc.so.2:/opt/sgl-workspace/.venv/lib/libiomp5.so
+  [1;32m✓[0m 已拉起进程 PID=17351，日志 /mnt/d/first-task/work/logs/sglang_server.log
+
+[1;36m[10:48:14][0m 等待 SGLang 服务就绪（最长 1800s）: http://127.0.0.1:30000/v1/models
+  [1;32m✓[0m 服务已就绪（耗时 25s）
+=== SERVER READY ===

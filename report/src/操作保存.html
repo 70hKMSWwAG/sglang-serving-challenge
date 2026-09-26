@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 14mm 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: #0f172a; background: #fff;
+    font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", sans-serif;
+    font-size: 10px; line-height: 1.5;
+  }
+  h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: .5px; }
+  .sub { font-size: 9px; color: #64748b; margin: 0 0 7px; }
+  .rule { height: 2px; background: linear-gradient(90deg,#1d4ed8,#0ea5e9 45%,#e2e8f0); margin-bottom: 10px; }
+
+  .sec { margin-bottom: 13px; break-inside: avoid; }
+  .sh { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; }
+  .badge {
+    flex: 0 0 auto; background: #1d4ed8; color: #fff; font-weight: 700;
+    font-size: 8.5px; border-radius: 3px; padding: 1.5px 6px;
+  }
+  .st { font-size: 12px; font-weight: 700; color: #1e293b; }
+  .cap { font-size: 9px; color: #475569; margin: 0 0 6px; }
+  .cap b { color: #1d4ed8; }
+  .shot {
+    display: block; margin: 0 auto; max-width: 100%; max-height: 205mm;
+    border: 1px solid #cbd5e1; border-radius: 4px;
+  }
+  .kv {
+    margin: 5px 0 0; border: 1px solid #e2e8f0; border-left: 3px solid #0ea5e9;
+    background: #f8fafc; border-radius: 4px; padding: 5px 8px;
+    font-size: 8.8px; color: #334155;
+  }
+  .kv b { color: #0f172a; }
+  .foot {
+    margin-top: 9px; border-top: 1px dashed #cbd5e1; padding-top: 6px;
+    font-size: 8.5px; color: #64748b;
+  }
+</style>
+</head>
+<body>
+
+  <h1>操作保存</h1>
+  <p class="sub">SGLang 在线推理服务挑战 · 服务启动、在线验证与 Mooncake 压测全过程的终端实录</p>
+  <div class="rule"></div>
+
+  <div class="sec">
+    <div class="sh"><span class="badge">截图1</span><span class="st">启动 SGLang 0.5.14 服务并验证在线推理</span></div>
+    <p class="cap">
+      在 WSL2 (Ubuntu 26.04) 中以 OpenAI-compatible 方式启动 SGLang，<b>--device cpu --tp 1</b>。
+      日志显示：平台不支持 Intel AMX 时自动回退 <b>torch_native</b> 后端；KV Cache 分配
+      <b>81261 tokens</b>（K/V 各 4.34 GB，bf16）；<b>max_total_num_tokens=81261、
+      chunked_prefill_size=2048、max_prefill_tokens=16384、context_len=40960</b>；
+      <b>RadixCache</b> 已初始化。随后 <b>GET /v1/models</b> 返回模型信息，
+      <b>POST /v1/chat/completions</b> 完成一次真实推理（prompt 36 tokens / completion 256 tokens）。
+    </p>
+    <img class="shot" src="file:///D:/first-task/work/results/shot1.png" alt="截图1">
+  </div>
+
+  <div class="sec">
+    <div class="sh"><span class="badge">截图2a</span><span class="st">Mooncake FAST'25 trace 采样 + Poisson 到达压测</span></div>
+    <p class="cap">
+      从 <b>mooncake_trace.jsonl</b>（共 23608 条）随机采样 <b>20 条</b>，按每条记录的
+      <b>input_length / output_length</b> 构造 synthetic prompt；相邻到达间隔服从指数分布，
+      即严格的<b>泊松到达过程</b>（λ = 0.5 req/s，平均间隔 2.0 s）。逐条记录
+      input tokens / output tokens / status / TTFT / latency。
+    </p>
+    <img class="shot" src="file:///D:/first-task/work/results/shot2a.png" alt="截图2a">
+  </div>
+
+  <div class="sec">
+    <div class="sh"><span class="badge">截图2b</span><span class="st">逐请求结果汇总与统计</span></div>
+    <p class="cap">
+      结果：<b>成功率 20/20 = 100%</b>，总墙钟 <b>72.8 s</b>，输出吞吐 <b>12.28 tok/s</b>，
+      TTFT 均值 <b>2113.5 ms</b>（p50 1414.1 ms，p90 3952.1 ms），端到端时延均值
+      <b>25574.7 ms</b>（p50 23812.2 ms，p90 44506.9 ms）。
+    </p>
+    <img class="shot" src="file:///D:/first-task/work/results/shot2b.png" alt="截图2b">
+  </div>
+
+  <div class="sec">
+    <div class="sh"><span class="badge">附录</span><span class="st">服务端 RadixCache 前缀复用证据</span></div>
+    <p class="cap">
+      服务端 Prefill batch 日志中 <b>#cached-token &gt; 0</b> 即表示该请求已有前缀命中 RadixCache、
+      对应的 prefill 计算被直接跳过。实验令所有压测请求共享 <b>256 token</b> 公共前缀
+      （对应 Mooncake trace 中普遍共享的 <b>hash_ids[0]</b>：该字段在 23608 条记录中
+      仅取 4 个不同值，最常见者占 46.3%）。全程 <b>38 个 prefill 批次中有 29 个命中，
+      占比 76.3%</b>；命中长度常见 256（即共享前缀长度），亦出现 1023/1024（整段 prompt 已被缓存）。
+      同时可见 prefill 输入吞吐约 <b>360~420 tok/s</b>。
+    </p>
+    <img class="shot" src="file:///D:/first-task/work/results/shot3.png" alt="附录">
+    <div class="kv">
+      <b>说明：</b>本页所有输出均取自真实运行日志与真实 HTTP 响应，未做人工改写。
+      完整原始记录见仓库 <code>work/logs/</code> 与 <code>work/results/</code>。
+    </div>
+  </div>
+
+  <div class="foot">
+    运行环境：WSL2 · Ubuntu 26.04.1 LTS · Intel Core Ultra 5 338H (12 vCPU) · 15 GiB RAM ·
+    SGLang 0.5.14 (源码编译, CPU/AVX2 基线) · Ray 2.56.0 · Qwen3-0.6B (bf16)
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,35 @@
+$ python 04_benchmark.py --n 20 --mean-interval 2.0 --input-cap 1024 --out-cap 64 --seed 2026
+
+==============================================================================
+Mooncake FAST'25 trace 采样 + Poisson 到达 workload
+==============================================================================
+trace 文件     : /mnt/d/first-task/data/mooncake_trace.jsonl
+trace 记录总数 : 23608
+采样条数       : 20  (seed=2026)
+语料 token 数  : 6120  (需要 >= 1024)
+泊松到达       : λ = 0.5000 req/s (平均间隔 2.00s)，总到达跨度 58.8s
+输入长度区间   : 917 ~ 1024 tokens
+输出长度区间   : 8 ~ 64 tokens
+公共前缀       : 256 tokens（对应 trace 的 hash_ids[0] 共享前缀）
+
+[warmup 1] status=200 ttft=193ms latency=1042ms err=None
+  [ 1/20] req#7  in=1024  out=23   status=ok      ttft=5307.2ms  lat=18536.7ms
+  [ 2/20] req#2  in=1024  out=25   status=ok      ttft=3952.1ms  lat=27872.6ms
+  [ 3/20] req#8  in=1024  out=24   status=ok      ttft=1156.2ms  lat=13746.0ms
+  [ 4/20] req#10 in=1024  out=29   status=ok      ttft=955.5ms  lat=11786.0ms
+  [ 5/20] req#1  in=1024  out=64   status=ok      ttft=2294.7ms  lat=49072.9ms
+  [ 6/20] req#0  in=1024  out=64   status=ok      ttft=3700.5ms  lat=52469.0ms
+  [ 7/20] req#3  in=917   out=64   status=ok      ttft=2169.6ms  lat=44506.9ms
+  [ 8/20] req#4  in=1024  out=64   status=ok      ttft=2374.1ms  lat=43307.3ms
+  [ 9/20] req#6  in=1024  out=64   status=ok      ttft=5883.7ms  lat=40557.9ms
+  [10/20] req#5  in=1024  out=64   status=ok      ttft=3449.2ms  lat=41029.9ms
+  [11/20] req#13 in=1024  out=8    status=ok      ttft=1521.3ms  lat=7844.3ms
+  [12/20] req#16 in=1024  out=8    status=ok      ttft=1066.7ms  lat=4986.6ms
+  [13/20] req#9  in=1024  out=64   status=ok      ttft=672.2ms  lat=33193.3ms
+  [14/20] req#18 in=1024  out=8    status=ok      ttft=639.3ms  lat=3812.8ms
+  [15/20] req#15 in=1024  out=24   status=ok      ttft=1045.8ms  lat=12051.7ms
+  [16/20] req#19 in=1024  out=41   status=ok      ttft=808.3ms  lat=11609.2ms
+  [17/20] req#11 in=1024  out=64   status=ok      ttft=1060.5ms  lat=25836.4ms
+  [18/20] req#14 in=1024  out=64   status=ok      ttft=1414.1ms  lat=23812.2ms
+  [19/20] req#12 in=1024  out=64   status=ok      ttft=1680.4ms  lat=24803.3ms
+  [20/20] req#17 in=1024  out=64   status=ok      ttft=1119.2ms  lat=20658.2ms

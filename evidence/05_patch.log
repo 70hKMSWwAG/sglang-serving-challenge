@@ -1,0 +1,21 @@
+
+[1;36m[10:43:29][0m ==================== 阶段 1b/5：CPU ISA 兼容性补丁 ====================
+  [1;32m✓[0m 补丁已存在，跳过
+
+[1;36m[10:43:29][0m 以 AVX2 基线重新编译 sgl-kernel（约 1~5 分钟）
+Using Python 3.12.14 environment at: /opt/sgl-workspace/.venv
+Resolved 1 package in 1ms
+   Building sglang-kernel-cpu @ file:///opt/sgl-workspace/sglang/sgl-kernel
+      Built sglang-kernel-cpu @ file:///opt/sgl-workspace/sglang/sgl-kernel
+Prepared 1 package in 48.54s
+Uninstalled 1 package in 0.56ms
+Installed 1 package in 1ms
+ ~ sglang-kernel-cpu==0.4.4 (from file:///opt/sgl-workspace/sglang/sgl-kernel)
+  [1;32m✓[0m 编译完成，开始验证
+
+[1;36m[10:44:17][0m 验证 sgl_kernel 可加载
+  ✓ sgl_kernel 导入成功: /opt/sgl-workspace/.venv/lib/python3.12/site-packages/sgl_kernel/__init__.py
+  ✓ torch: 2.12.0+cpu
+  [1;32m✓[0m sgl-kernel 基线版本可用
+
+[1;36m[10:44:18][0m ==================== ISA 补丁阶段完成 ====================
