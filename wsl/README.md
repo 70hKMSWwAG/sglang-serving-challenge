@@ -31,11 +31,14 @@ wsl -u root -e bash /mnt/d/first-task/wsl/run_all.sh
 sudo bash /mnt/d/first-task/wsl/01_setup_env.sh   # 造环境（编译 sgl-kernel，最耗时）
 sudo bash /mnt/d/first-task/wsl/02_start_server.sh # 起 Ray + SGLang 服务
 sudo bash /mnt/d/first-task/wsl/03_single_request.sh # 截图1 的原始证据
-sudo bash /mnt/d/first-task/wsl/04_benchmark.py ...  # 截图2（用 venv 的 python 跑）
-```
+sudo bash /mnt/d/first-task/wsl/06_make_shots.sh   # 汇编截图文本
 
-> `04_benchmark.py` 需用 SGLang 环境的 Python 执行：
-> `source /mnt/d/first-task/work/env.sh && $VENV/bin/python /mnt/d/first-task/wsl/04_benchmark.py --n 20`
+# 截图2：Mooncake 采样 + Poisson 压测
+# 注意：04_benchmark.py 是 Python，必须用 SGLang 环境的解释器执行，不能用 bash
+source /mnt/d/first-task/work/env.sh
+$VENV/bin/python /mnt/d/first-task/wsl/04_benchmark.py \
+    --n 20 --mean-interval 2.0 --input-cap 1024 --out-cap 64
+```
 
 ## 脚本职责
 
@@ -47,6 +50,7 @@ sudo bash /mnt/d/first-task/wsl/04_benchmark.py ...  # 截图2（用 venv 的 py
 | `03_single_request.sh` | `GET /v1/models` + 一次完整推理（含流式），原始输出落盘 |
 | `04_benchmark.py` | Mooncake trace 采样 + Poisson 到达压测，记录 input/output tokens、status、TTFT、latency |
 | `05_patch_cpu_isa.sh` | **无 AVX-512 时的自救补丁**：改写 sgl-kernel 的 ISA 编译选项并重编译（详见下节） |
+| `06_make_shots.sh` | 从真实日志汇编截图文本（截图1 / 截图2a / 截图2b） |
 | `99_selfcheck.sh` | 环境自检：torch / sgl_kernel / sglang 能否导入 |
 | `run_all.sh` | 串联全流程，日志汇总到 `work/logs/run_all.log` |
 
@@ -108,7 +112,9 @@ D:\first-task\work\
 
 - **SGLang 与 Ray 分属两个 venv**（`$VENV` / `$RAYVENV`），符合题目「可放在不同 Python 环境、通过 HTTP 通信」的要求。
 - **CPU 引擎**：`SGLANG_USE_CPU_ENGINE=1`，并逐库探测拼装 `LD_PRELOAD`（tcmalloc / tbbmalloc / libiomp5），不硬编码库名。
-- **前缀复用**：所有压测请求共享 512 token 公共前缀（对应 trace 中共享的 `hash_ids[0]`），用于真实触发 RadixCache。
+- **前缀复用**：所有压测请求共享 **256** token 公共前缀（对应 trace 中共享的 `hash_ids[0]`），用于真实触发 RadixCache。
+  脚本 `--prefix-tokens` 默认 512，但会按 `P = min(prefix_tokens, max_input_tokens // 4)` 夹紧；
+  本次 `--input-cap 1024` 下实际生效值为 **256**（与 `benchmark_results.json` 的 `shared_prefix_tokens` 一致）。
 - **绕开系统代理**：所有对 `127.0.0.1` 的请求均使用 `--noproxy '*'` 或 `http.client` 直连，
   避免 Watt Toolkit 之类的代理拦截本地回环。
 - **换行符**：所有 `.sh` 均为 LF，已在仓库中通过 `.gitattributes` 固化，避免 `bad interpreter: ^M`。
