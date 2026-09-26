@@ -50,7 +50,7 @@ $VENV/bin/python /mnt/d/first-task/wsl/04_benchmark.py \
 | `03_single_request.sh` | `GET /v1/models` + 一次完整推理（含流式），原始输出落盘 |
 | `04_benchmark.py` | Mooncake trace 采样 + Poisson 到达压测，记录 input/output tokens、status、TTFT、latency |
 | `05_patch_cpu_isa.sh` | **无 AVX-512 时的自救补丁**：改写 sgl-kernel 的 ISA 编译选项并重编译（详见下节） |
-| `06_make_shots.sh` | 从真实日志汇编截图文本（截图1 / 截图2a / 截图2b） |
+| `06_make_shots.sh` | 从真实日志汇编截图文本（截图1 / 截图2a / 截图2b）；截图1 的推理摘要是汇编时**另发一次真实请求**所得，故与 `shot1_raw.txt` 非同一次调用（token 数会不同） |
 | `99_selfcheck.sh` | 环境自检：torch / sgl_kernel / sglang 能否导入 |
 | `run_all.sh` | 串联全流程，日志汇总到 `work/logs/run_all.log` |
 

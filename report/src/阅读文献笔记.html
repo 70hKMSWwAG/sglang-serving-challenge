@@ -116,10 +116,10 @@
         <tr><td><code>timestamp</code></td><td>请求到达时间</td><td>作为原始到达语义的参考（本次改为自行生成泊松到达时刻）</td></tr>
         <tr><td><code>input_length</code></td><td>输入 token 数</td><td>决定 synthetic prompt 的目标长度</td></tr>
         <tr><td><code>output_length</code></td><td>期望输出 token 数</td><td>决定 <code>max_tokens</code></td></tr>
-        <tr><td><code>hash_ids</code></td><td>前缀块的哈希 id 序列</td><td><b>关键观察：几乎所有记录都以 hash_ids[0] 开头</b>，说明存在被高频共享的公共前缀</td></tr>
+        <tr><td><code>hash_ids</code></td><td>前缀块的哈希 id 序列</td><td><b>关键观察：23608 条记录中 hash_ids[0] 只取 4 个不同值、最常见者占 46.3%</b>，说明存在被高频共享的公共前缀</td></tr>
       </tbody>
     </table>
-    <div class="take"><b>由 trace 结构得到的实验设计：</b>既然真实负载中的请求共享同一前缀块，本次实验就让所有采样请求共享一段<b>长度 512 token 的公共前缀</b>，再拼接各自独立的后缀。这样既忠实于 trace 的语义，又能真实触发 SGLang 的 RadixCache 前缀复用，从而在 CPU 上观测到"公共前缀只 prefill 一次"的效果。</div>
+    <div class="take"><b>由 trace 结构得到的实验设计：</b>既然真实负载中的请求共享同一前缀块，本次实验就让所有采样请求共享一段<b>长度 256 token 的公共前缀</b>（脚本默认 512，会被 <code>min(prefix_tokens, input_cap/4)</code> 夹紧为 256），再拼接各自独立的后缀。这样既忠实于 trace 的语义，又能真实触发 SGLang 的 RadixCache 前缀复用，从而在 CPU 上观测到"公共前缀只 prefill 一次"的效果。</div>
     <p><b>采样方法：</b>用固定随机种子（seed=2026）从 trace 中随机抽取请求条数 N（本次 N=20，满足题目 10~30 条的要求），按 <code>input_length</code> / <code>output_length</code> 构造 prompt 与生成长度上限，再以<b>泊松过程</b>（相邻到达间隔服从指数分布，λ = 1/平均间隔）生成每个请求的发送时刻。记录 input tokens、output tokens、status、TTFT 与 latency。</p>
 
     <h2>四、两条路线的关系与启发</h2>

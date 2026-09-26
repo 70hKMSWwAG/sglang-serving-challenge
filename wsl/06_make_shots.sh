@@ -4,6 +4,12 @@
 # 原则：所有内容都取自真实日志与真实 HTTP 响应，不手工编造任何一行输出。
 #   截图1 = 服务启动关键行 + GET /v1/models + 一次完整 chat/completions
 #   截图2 = Mooncake trace 采样 + Poisson 压测的逐请求结果表
+#
+# 注意：截图1 中的 chat/completions 摘要，是在**汇编时另发起一次真实请求**得到的
+#   （见下方 curl 调用），因此它的 id / usage 与 03_single_request.sh 落盘的
+#   shot1_raw.txt 并不是同一次调用，completion_tokens 会因采样随机性而不同
+#   （实测 256 / finish_reason=length 与 250 / finish_reason=stop）。
+#   两者都是真实 HTTP 响应，不存在人工编造。
 set -o pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/00_common.sh"

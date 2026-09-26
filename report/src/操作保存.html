@@ -53,9 +53,10 @@
       <b>81261 tokens</b>（K/V 各 4.34 GB，bf16）；<b>max_total_num_tokens=81261、
       chunked_prefill_size=2048、max_prefill_tokens=16384、context_len=40960</b>；
       <b>RadixCache</b> 已初始化。随后 <b>GET /v1/models</b> 返回模型信息，
-      <b>POST /v1/chat/completions</b> 完成一次真实推理（prompt 36 tokens / completion 256 tokens）。
+      <b>POST /v1/chat/completions</b> 完成一次真实推理（prompt 36 tokens / completion 256 tokens，
+      达到 <code>max_tokens=256</code> 上限，finish_reason=length）。
     </p>
-    <img class="shot" src="file:///D:/first-task/work/results/shot1.png" alt="截图1">
+    <img class="shot" src="../../evidence/shot1.png" alt="截图1">
   </div>
 
   <div class="sec">
@@ -66,7 +67,7 @@
       即严格的<b>泊松到达过程</b>（λ = 0.5 req/s，平均间隔 2.0 s）。逐条记录
       input tokens / output tokens / status / TTFT / latency。
     </p>
-    <img class="shot" src="file:///D:/first-task/work/results/shot2a.png" alt="截图2a">
+    <img class="shot" src="../../evidence/shot2a.png" alt="截图2a">
   </div>
 
   <div class="sec">
@@ -76,7 +77,7 @@
       TTFT 均值 <b>2113.5 ms</b>（p50 1414.1 ms，p90 3952.1 ms），端到端时延均值
       <b>25574.7 ms</b>（p50 23812.2 ms，p90 44506.9 ms）。
     </p>
-    <img class="shot" src="file:///D:/first-task/work/results/shot2b.png" alt="截图2b">
+    <img class="shot" src="../../evidence/shot2b.png" alt="截图2b">
   </div>
 
   <div class="sec">
@@ -86,13 +87,14 @@
       对应的 prefill 计算被直接跳过。实验令所有压测请求共享 <b>256 token</b> 公共前缀
       （对应 Mooncake trace 中普遍共享的 <b>hash_ids[0]</b>：该字段在 23608 条记录中
       仅取 4 个不同值，最常见者占 46.3%）。全程 <b>38 个 prefill 批次中有 29 个命中，
-      占比 76.3%</b>；命中长度常见 256（即共享前缀长度），亦出现 1023/1024（整段 prompt 已被缓存）。
-      同时可见 prefill 输入吞吐约 <b>360~420 tok/s</b>。
+      占比 76.3%</b>；命中长度以 256（即共享前缀长度）与 1023/1024（整段 prompt 已被缓存）为主。
+      同时可见：大批次（<code>#new-token ≥ 600</code>，共 12 个）时服务端自报 prefill 输入吞吐为
+      <b>214~423 tok/s</b>；小批次的瞬时值受 1 秒时间粒度限制，不具参考意义。
     </p>
-    <img class="shot" src="file:///D:/first-task/work/results/shot3.png" alt="附录">
+    <img class="shot" src="../../evidence/shot3.png" alt="附录">
     <div class="kv">
       <b>说明：</b>本页所有输出均取自真实运行日志与真实 HTTP 响应，未做人工改写。
-      完整原始记录见仓库 <code>work/logs/</code> 与 <code>work/results/</code>。
+      完整原始记录见仓库 <code>evidence/</code> 目录。
     </div>
   </div>
 

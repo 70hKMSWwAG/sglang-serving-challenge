@@ -95,7 +95,7 @@
   </div>
 
   <div class="foot">
-    <b>实验侧印证：</b>本次在 CPU 上以 Qwen3-0.6B 启动 SGLang OpenAI-compatible 服务，按 Mooncake FAST'25 trace 采样的请求均<b>共享同一段长度为 512 token 的公共前缀</b>（对应 trace 中所有记录共享的 hash_ids[0]），用于触发 RadixCache 前缀复用，并通过 <code>/metrics</code> 读取前缀缓存命中率加以验证。
+    <b>实验侧印证：</b>本次在 CPU 上以 Qwen3-0.6B 启动 SGLang OpenAI-compatible 服务，按 Mooncake FAST'25 trace 采样的压测请求均<b>共享一段 256 token 的公共前缀</b>（由 <code>min(--prefix-tokens, input_cap/4)</code> 夹紧得到，对应 trace 中被广泛共享的 hash_ids[0]），用于触发 RadixCache 前缀复用。命中情况由服务端 <code>Prefill batch</code> 日志的 <code>#cached-token</code> 字段直接观测：<b>38 个 prefill 批次中 29 个命中（76.3%）</b>，命中长度常见 256，亦出现 1023/1024（整段 prompt 已被缓存）。
   </div>
 </body>
 </html>
