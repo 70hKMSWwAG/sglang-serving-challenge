@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 15mm 14mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: #0f172a; background: #fff;
+         font-family: "Microsoft YaHei","微软雅黑","PingFang SC",sans-serif;
+         font-size: 10.2px; line-height: 1.62; }
+  h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: .5px; }
+  .sub { font-size: 9px; color: #64748b; margin: 0 0 8px; }
+  .rule { height: 2px; background: linear-gradient(90deg,#1d4ed8,#0ea5e9 45%,#e2e8f0); margin-bottom: 11px; }
+  h2 { font-size: 12px; margin: 13px 0 5px; color: #1e293b;
+       border-left: 3.5px solid #1d4ed8; padding-left: 7px; }
+  p { margin: 0 0 6px; text-align: justify; }
+  ul, ol { margin: 3px 0 7px; padding-left: 17px; }
+  li { margin: 2.5px 0; text-align: justify; }
+  code { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px;
+         padding: 0 3px; font-family: Consolas,"DejaVu Sans Mono",monospace; font-size: 9.2px; }
+  pre { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #94a3b8;
+        border-radius: 4px; padding: 6px 9px; margin: 4px 0 8px; font-size: 9.1px;
+        font-family: Consolas,"DejaVu Sans Mono",monospace; white-space: pre-wrap;
+        word-break: break-all; line-height: 1.5; color: #334155; }
+  .box { border: 1px solid #e2e8f0; border-left: 3px solid #0ea5e9; border-radius: 4px;
+         background: #f8fafc; padding: 6px 9px; margin: 6px 0; font-size: 9.6px; }
+  .warn { border-left-color: #dc2626; }
+  .ok { border-left-color: #059669; }
+  table { width: 100%; border-collapse: collapse; margin: 5px 0 8px; font-size: 9.3px; }
+  th, td { border: 1px solid #cbd5e1; padding: 3px 5px; vertical-align: top; text-align: left; }
+  th { background: #eef2ff; color: #1e293b; font-weight: 700; }
+  tbody tr:nth-child(even) td { background: #f8fafc; }
+  td.k { font-weight: 700; color: #1e293b; white-space: nowrap; }
+  td.y { color: #b45309; font-weight: 700; }
+  td.n { color: #047857; font-weight: 700; }
+  .sig { margin-top: 12px; text-align: right; font-size: 9.4px; color: #64748b; }
+</style>
+</head>
+<body>
+
+  <h1>AI 使用说明情况</h1>
+  <p class="sub">SGLang 在线推理服务挑战 · AI 协助的范围、方式与可靠性核查</p>
+  <div class="rule"></div>
+
+  <h2>一、使用了哪些模型与工具</h2>
+  <table>
+    <thead><tr><th style="width:24%">环节</th><th style="width:30%">所用 AI / 工具</th><th>承担的具体工作</th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="k">主体执行</td>
+        <td>WorkBuddy 智能体（具备本地文件读写与命令执行能力的 LLM 代理）</td>
+        <td>阅读任务 PDF；探测硬件与网络；编写 WSL 端全套脚本；驱动「编译 → 起服务 → 验证 → 压测」全流程；
+            生成日志、指标与交付文档</td>
+      </tr>
+      <tr>
+        <td class="k">资料核对</td>
+        <td>大语言模型 + 联网检索</td>
+        <td>核对 SGLang 0.5.14 的 CPU 构建配方、Mooncake trace 字段结构、
+            两篇论文（SGLang NeurIPS'24 / vLLM SOSP'23）的官方摘要与实验数据</td>
+      </tr>
+      <tr>
+        <td class="k">人工部分</td>
+        <td>本人</td>
+        <td>提供 WSL2 与 Ubuntu 环境；解除本机安全策略对 <code>wsl.exe</code> 的拦截；
+            确认最终交付形态与取舍</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>二、我实际使用的提示词</h2>
+  <p>
+    我并没有反复雕琢提示词，主要用了一条"把主动权交出去"的指令，后续全部在同一条对话里追问。
+  </p>
+  <h3>初始提示词</h3>
+  <pre>@first-challenge.pdf 帮我完成任务，基本由你来完成，我安装了 wsl2，
+wsl 里有 ubuntu，里面配置了 git 和 github</pre>
+  <h3>过程中追加的关键提示</h3>
+  <pre>wsl 好了</pre>
+  <p>
+    第二条只有三个字，但它是整条链路能跑通的前提 —— 在此之前
+    <code>wsl.exe</code> 被本机安全策略列入程序黑名单，AI 无法在 WSL 内执行任何命令，
+    只能先把不依赖 WSL 的交付物做完并等待。这也说明：
+    <b>当 AI 的执行能力被环境卡住时，最有价值的动作不是换提示词，而是先把环境解锁。</b>
+  </p>
+
+  <h2>三、AI 具体是怎么帮到学习的</h2>
+  <ul>
+    <li>
+      <b>把"黑盒报错"变成"可验证的假设链"。</b>
+      在 <code>Illegal instruction</code> 这个最棘手的问题上，AI 没有停在猜测，
+      而是按"单独 import 定位模块 → <code>objdump</code> 反汇编数出 98672 处 <code>zmm</code> 引用 →
+      <code>/proc/cpuinfo</code> 确认无 AVX-512 → 回到 CMakeLists 找到硬编码的
+      <code>-march=x86-64-v4</code> → 在 <code>vec.h</code> 里找到
+      <code>CPU_CAPABILITY_AVX512</code> 的宏守卫与通用回退分支"的顺序逐层取证。
+      这条链本身就是一次很好的调试示范，我照着复现了一遍，学会了怎么用二进制与硬件层面的证据
+      去回答上层语言回答不了的问题。
+    </li>
+    <li>
+      <b>提前消灭不确定性。</b>
+      它先识别出 Watt Toolkit 的 GitHub 加速在做 TLS 中间人（<code>git clone</code> 直接失败），
+      于是把 Mooncake trace、SGLang 源码包、CPython、以及 1.5 GB 的模型权重
+      <b>全部预取到本地</b>，让 WSL 侧完全离线可构建。
+      这个"先做减法再动手"的顺序，比一路 debug 网络问题高效得多。
+    </li>
+    <li>
+      <b>用数据支撑设计决策。</b>
+      压测前先统计 trace：23608 条记录中 <code>hash_ids[0]</code> 只有 4 个取值、最常见占 46.3%，
+      据此设计"所有请求共享 256 token 前缀"，随后服务端日志出现 76.3% 的 prefill 批次命中
+      RadixCache。这让抽象概念（前缀复用）第一次变成了我能亲眼看到的数字。
+    </li>
+    <li>
+      <b>把一切落成可复现的脚本。</b>
+      最终交付包含完整脚本与原始日志，而不是"我这边跑通了"的口头结论 ——
+      这让结果可以被别人验证，也更接近真实工程的习惯。
+    </li>
+  </ul>
+
+  <h2>四、AI 是否误导过我？—— 如实说明</h2>
+  <p>
+    有过，而且不止一次。我认为把这些记下来比只写优点更有价值。
+  </p>
+  <table>
+    <thead><tr><th style="width:38%">AI 的判断</th><th style="width:12%">是否正确</th><th>实际情况</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>按官方 <code>xeen.Dockerfile</code> 的 CPU 配方编译 SGLang，
+          即可在 CPU 机器上运行</td>
+        <td class="y">部分错误</td>
+        <td>编译确实成功，但<b>无法运行</b>。官方"CPU 配方"隐含要求 AVX-512 + AMX，
+          文档并未明说。<b>教训：官方文档的"支持 CPU"不等于"支持任何 CPU"。</b></td>
+      </tr>
+      <tr>
+        <td>进度卡住是因为安全策略拦截 <code>wsl.exe</code>，需要用户解锁</td>
+        <td class="n">正确</td>
+        <td>这正是真实阻塞点；AI 没有假装能绕过，而是明确说明无法从自身侧解除。</td>
+      </tr>
+      <tr>
+        <td>把 <code>-march=x86-64-v4</code> 降为 <code>x86-64-v3</code> 后可以正常运行</td>
+        <td class="n">正确</td>
+        <td>已实测通过。AI 在动手前先用 <code>vec.h</code> 的宏守卫与
+          <code>#else</code> 回退分支验证了可行性，而不是盲目试错。</td>
+      </tr>
+      <tr>
+        <td>脚本里 <code>MODEL_ID="..."# 注释</code> 是合法写法</td>
+        <td class="y">错误</td>
+        <td>少一个空格导致 bash 把整行解析为"赋值 + 命令"，
+          变量根本没被赋值，脚本以 <code>unbound variable</code> 退出。
+          <b>这是 AI 自己写出的 bug，由运行日志暴露后被修正。</b></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="box warn">
+    <b>我的结论：</b>AI 在"检索、生成脚本、按证据推进排查"上非常强，
+    但它的输出<b>必须被真实运行结果检验</b>。上面第一行就是典型 ——
+    编译成功这种"看起来对了"的信号极具迷惑性，只有真正 <code>import</code> 一次、
+    真正发出一条推理请求，才能证伪。
+    <b>所以我的用法是：让 AI 负责提出假设和写代码，让日志和实测数字负责审判。</b>
+  </div>
+
+  <h2>五、AI 使用的边界声明</h2>
+  <ul>
+    <li>AI 全程只在本机 WSL 内操作，未访问任何外部账号或服务；</li>
+    <li>所有日志、指标、截图均取自真实运行过程，未做人工改写或美化；</li>
+    <li>对 AI 给出的技术结论（如论文数据、构建配方），我均以官方来源交叉核对过；</li>
+    <li>最终的环境取舍（如压测长度上限、AVX2 基线的性能代价）由我确认并已如实写入交付说明。</li>
+  </ul>
+
+  <p class="sig">—— 以上为本次作业中 AI 使用的完整说明。</p>
+
+</body>
+</html>

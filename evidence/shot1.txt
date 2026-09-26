@@ -1,0 +1,57 @@
+$ uname -sr && nproc
+Linux 6.18.33.2-microsoft-standard-WSL2
+12 vCPU
+
+# 以 OpenAI-compatible 方式在 CPU 上启动 SGLang 0.5.14
+$ python -m sglang.launch_server --model-path /opt/sgl-workspace/models/Qwen3-0.6B --device cpu --tp 1 \
+      --host 127.0.0.1 --port 30000 --trust-remote-code --disable-overlap-schedule
+
+  [2026-09-26 10:48:21] The current platform does not support Intel AMX, will fallback to torch_native backend.
+  [2026-09-26 10:48:30] Load weight end. elapsed=0.35 s, type=Qwen3ForCausalLM, avail mem=11.34 GB, mem usage=1.03 GB.
+  [2026-09-26 10:48:34] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 81261, K size: 4.34 GB, V size: 4.34 GB
+  [2026-09-26 10:48:34] max_total_num_tokens=81261, chunked_prefill_size=2048, max_prefill_tokens=16384, max_running_requests=2048, context_len=40960, available_cpu_mem=2.33 GB
+  [2026-09-26 10:48:34] Tree cache initialized: source=default impl=RadixCache hybrid_swa=False hybrid_ssm=False hierarchical=False streaming_wrapped=False
+  [2026-09-26 10:48:35] INFO:     Application startup complete.
+  [2026-09-26 10:48:35] INFO:     Uvicorn running on http://127.0.0.1:30000 (Press CTRL+C to quit)
+
+  # 说明：本机无 AMX/AVX-512，SGLang 自动回退 attention_backend=torch_native；
+  #       RadixCache 已启用（Tree cache initialized ... impl=RadixCache）。
+
+======================================================================
+
+$ curl -s http://127.0.0.1:30000/v1/models | python -m json.tool
+{
+    "object": "list",
+    "data": [
+        {
+            "id": "/opt/sgl-workspace/models/Qwen3-0.6B",
+            "object": "model",
+            "created": 1790390946,
+            "owned_by": "sglang",
+            "root": "/opt/sgl-workspace/models/Qwen3-0.6B",
+            "parent": null,
+            "max_model_len": 40960
+        }
+        ...
+
+======================================================================
+
+$ curl -s http://127.0.0.1:30000/v1/chat/completions -H 'Content-Type: application/json' -d '
+  {"model":"Qwen/Qwen3-0.6B",
+   "messages":[{"role":"system","content":"You are a concise assistant."},
+                {"role":"user","content":"用三句话说明 SGLang 的 RadixAttention 解决了什么问题。"}],
+   "max_tokens":256,"temperature":0.7,"stream":false}'
+
+  id             : 116dd04988674a41b0a60974d5d71f3e
+  model          : Qwen/Qwen3-0.6B
+  finish_reason  : length
+  usage          : {"prompt_tokens": 36, "total_tokens": 292, "completion_tokens": 256, "prompt_tokens_details": null, "reasoning_tokens": 0}
+  回答正文（截断显示）:
+      SGLang的RadixAttention解决了传统Transformer模型在处理长序列时的效率
+
+--- 补充：一次短提示的真实往返（便于观察 TTFT 与 token 统计） ---
+$ curl -s http://127.0.0.1:30000/v1/completions -H 'Content-Type: application/json' \
+      -d '{"model":"Qwen/Qwen3-0.6B","prompt":"Count from 1 to 50.","max_tokens":64,"ignore_eos":true}'
+  choices[0].text : ' How many numbers are there in the set {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, ' ...
+  finish_reason   : length
+  usage           : {"prompt_tokens": 9, "total_tokens": 73, "completion_tokens": 64, "prompt_tokens_details": null, "reasoning_tokens": 0}

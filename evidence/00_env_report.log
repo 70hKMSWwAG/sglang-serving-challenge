@@ -1,0 +1,26 @@
+### uname
+Linux L 6.18.33.2-microsoft-standard-WSL2 #1 SMP PREEMPT_DYNAMIC Thu Jun 18 21:54:43 UTC 2026 x86_64 GNU/Linux
+### os-release
+PRETTY_NAME="Ubuntu 26.04.1 LTS"
+NAME="Ubuntu"
+VERSION_ID="26.04"
+VERSION="26.04.1 LTS (Resolute Raccoon)"
+### cpu
+CPU(s):                                  12
+Model name:                              Intel(R) Core(TM) Ultra 5 338H
+Thread(s) per core:                      1
+Core(s) per socket:                      12
+Socket(s):                               1
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize ibt flush_l1d arch_capabilities
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-11
+### mem
+               total        used        free      shared  buff/cache   available
+Mem:            15Gi       752Mi       9.3Gi        25Mi       5.6Gi        14Gi
+Swap:          4.0Gi          0B       4.0Gi
+### disk(/)
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdd       1007G  5.7G  950G   1% /
+/dev/sdd       1007G  5.7G  950G   1% /
+### gcc
+gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0

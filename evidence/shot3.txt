@@ -1,0 +1,28 @@
+$ grep "Prefill batch" /mnt/d/first-task/work/logs/sglang_server.log | tail -20
+$ # 只保留与本问题相关的字段：#new-seq / #new-token / #cached-token / #running-req
+
+10:51:15  #new-seq:1   #new-token:661    #cached-token:256    #running-req:3  
+10:51:18  #new-seq:1   #new-token:745    #cached-token:279    #running-req:4  
+10:51:21  #new-seq:1   #new-token:767    #cached-token:257    #running-req:5  
+10:51:24  #new-seq:2   #new-token:769    #cached-token:1279   #running-req:6  
+10:51:28  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:8  
+10:51:33  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:9  
+10:51:36  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:10 
+10:51:52  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:7  
+10:51:54  #new-seq:2   #new-token:2      #cached-token:2046   #running-req:8  
+10:51:55  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:10 
+10:51:56  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:11 
+10:51:57  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:12 
+10:51:58  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:13 
+10:52:02  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:6  
+10:52:05  #new-seq:1   #new-token:1      #cached-token:1023   #running-req:7  
+10:53:28  #new-seq:1   #new-token:1      #cached-token:8      #running-req:0  
+10:53:46  #new-seq:1   #new-token:1      #cached-token:35     #running-req:0  
+10:54:05  #new-seq:1   #new-token:1      #cached-token:8      #running-req:0  
+10:59:28  #new-seq:1   #new-token:1      #cached-token:35     #running-req:0  
+10:59:44  #new-seq:1   #new-token:1      #cached-token:8      #running-req:0  
+
+  # 读法：#cached-token > 0 表示该请求已有前缀命中 RadixCache，这部分 prefill 被直接跳过。
+  # 统计（全程 38 个 prefill 批次）：29 个批次命中，占比 76.3%。
+  #   命中长度常见 256（= 各请求共享的公共前缀长度），亦出现 1023/1024（整段 prompt 已缓存）。
+  #   未命中（=0）的批次 9 个，多出现在缓存被新前缀挤出或首个请求时。

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>阅读文献笔记.pdf</title>
+<style>
+  @page { size: A4 portrait; margin: 10mm 9mm; }
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Microsoft YaHei","微软雅黑","PingFang SC",sans-serif;
+         color: #0f172a; background: #fff; font-size: 10.2px; line-height: 1.5; }
+  h1 { font-size: 17px; margin: 0 0 2px; }
+  .sub { font-size: 9.6px; color: #64748b; margin: 0 0 6px; }
+  .rule { height: 2px; background: linear-gradient(90deg,#1d4ed8,#0ea5e9 45%,#e2e8f0); margin-bottom: 8px; }
+  h2 { font-size: 12.6px; margin: 9px 0 4px; padding: 3px 7px; border-left: 4px solid #4f46e5;
+       background: #f1f5ff; color: #1e3a8a; break-after: avoid; }
+  h3 { font-size: 11px; margin: 6px 0 2px; color: #334155; break-after: avoid; }
+  p { margin: 0 0 4px; }
+  ul { margin: 0 0 4px; padding-left: 18px; }
+  li { margin: 1.5px 0; }
+  b { color: #1e3a8a; }
+  code { background: #f1f5f9; padding: 0 3px; border-radius: 2px; font-size: 9.4px; }
+  table { width: 100%; border-collapse: collapse; margin: 3px 0 6px; font-size: 9.4px; }
+  th, td { border: 1px solid #cbd5e1; padding: 3px 5px; vertical-align: top; text-align: left; }
+  th { background: #eef2ff; font-weight: 700; color: #1e293b; }
+  tbody tr:nth-child(even) td { background: #f8fafc; }
+  .sec { break-inside: avoid; }
+  .kv { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px;
+        padding: 4px 8px; margin: 3px 0 5px; font-size: 9.5px; color: #334155; }
+  .kv span { margin-right: 14px; white-space: nowrap; }
+  .take { border-left: 3px solid #d97706; background: #fffbeb; padding: 4px 8px;
+          border-radius: 3px; margin: 4px 0; font-size: 9.6px; }
+  .brk { break-before: page; }
+</style>
+</head>
+<body>
+  <h1>阅读文献笔记</h1>
+  <p class="sub">围绕 SGLang / RadixAttention 与 vLLM / PagedAttention 两条主线，兼及本挑战所用的 Mooncake FAST'25 trace</p>
+  <div class="rule"></div>
+
+  <table>
+    <thead><tr><th style="width:26%">文献</th><th style="width:16%">出处</th><th style="width:30%">核心贡献</th><th>与本挑战的关系</th></tr></thead>
+    <tbody>
+      <tr><td>SGLang: Efficient Execution of Structured Language Model Programs</td><td>NeurIPS 2024 · arXiv:2312.07104</td><td>前端语言 + 运行时协同设计；RadixAttention 复用 KV cache；压缩 FSM 加速结构化输出</td><td>本挑战部署的框架本体；第 2、4 题的答案来源</td></tr>
+      <tr><td>Efficient Memory Management for Large Language Model Serving with PagedAttention</td><td>SOSP 2023 · arXiv:2309.06180</td><td>借鉴 OS 分页思想管理 KV cache，碎片趋近于零，支持请求内/跨请求共享</td><td>第 4 题的对照对象；理解 paged KV 的源头</td></tr>
+      <tr><td>SGLang Documentation（CPU Server / Attention Backend / HiCache）</td><td>docs.sglang.io</td><td>CPU 引擎部署方式、<code>--page-size</code> 语义、HiCache 三级缓存设计</td><td>环境搭建与 page size 概念的直接依据</td></tr>
+      <tr><td>Mooncake FAST'25 Trace Release</td><td>github.com/kvcache-ai/Mooncake</td><td>真实生产环境的推理请求 trace（时间戳、输入/输出长度、前缀 hash）</td><td>第 2 题 workload 的数据来源</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sec">
+    <h2>一、SGLang / RadixAttention（NeurIPS 2024）</h2>
+    <div class="kv">
+      <span><b>出处：</b>arXiv:2312.07104，NeurIPS 2024</span>
+      <span><b>关键词：</b>RadixAttention、prefix reuse、压缩 FSM、cache-aware scheduling</span>
+    </div>
+    <h3>1. 它想解决什么问题</h3>
+    <p>LLM 应用早已不是"一问一答"，而是包含<b>多次生成调用、复杂控制流、结构化输入输出</b>的程序（agent 控制、多轮对话、RAG、few-shot 批量推理）。这类负载有两个共性痛点：</p>
+    <ul>
+      <li><b>前缀高度重复</b>：同一 system prompt、同一段对话历史、同一批 few-shot 示例会被反复处理，但已有系统在请求结束后<b>直接丢弃 KV cache</b>，导致重复 prefill。</li>
+      <li><b>结构化输出解码慢</b>：用有限状态机约束 JSON/正则输出时，逐 token 的 FSM 状态推进成为瓶颈。</li>
+    </ul>
+    <h3>2. 核心方法</h3>
+    <ul>
+      <li><b>RadixAttention（本文最关键）：</b>用一棵 <b>radix tree</b>（压缩前缀树，边可承载任意长度的 token 序列）维护"token 序列 → KV 张量"的映射。请求到达时做最长前缀匹配并复用其 KV，生成结果回插树中，供后续请求继续复用。这些 KV 张量以<b>非连续的分页布局</b>存放，论文原始设计中<b>每页大小等于一个 token</b>。</li>
+      <li><b>淘汰与并发安全：</b>LRU 策略<b>优先淘汰最久未使用的叶子</b>，使共同祖先能长期存活（祖先被复用的价值最高）；每个节点维护<b>引用计数</b>，被运行中请求占用的节点不可淘汰。</li>
+      <li><b>不预分配固定缓存池：</b>缓存 token 与运行中请求<b>共用同一内存池</b>——等待请求足够多时，系统会淘汰缓存以换取更大的 batch，把内存优先分配给吞吐。</li>
+      <li><b>压缩 FSM：</b>把多个 FSM 转移压缩为单步，避免结构化输出时逐 token 推进状态机，加速 JSON 等约束解码。</li>
+      <li><b>前端—运行时协同设计：</b>前端语言暴露 <code>gen</code> / <code>fork</code> / <code>join</code> / <code>select</code> 等原语；执行 <code>fork</code> 前先把公共前缀作为"hint"发给运行时，使前缀被正确插入树中，简化了调度与匹配。</li>
+      <li><b>cache-aware scheduling：</b>调度时优先选择能命中已有缓存的请求，进一步提升命中率。</li>
+    </ul>
+    <div class="take"><b>关键结论：</b>在 agent 控制、逻辑推理、few-shot、JSON 解码、RAG、多轮对话等任务上，相比当时的 SOTA 推理系统实现<b>最高 6.4× 的吞吐提升</b>。论文还强调 RadixAttention 与 continuous batching、paged attention、张量并行等既有技术<b>相互兼容</b>，且在无缓存命中时引入的内存与时间开销可忽略。</div>
+    <h3>3. 我的理解与疑问</h3>
+    <ul>
+      <li>RadixAttention 的价值本质是把"<b>存储的一次共享</b>"放大成"<b>计算的一次省略</b>"——这正是 TTFT 下降的来源，而不只是省内存。</li>
+      <li>LRU 淘汰叶子这一细节很精妙：它使缓存淘汰的粒度与"前缀可复用性"对齐，而非简单按块淘汰。</li>
+      <li>待考证：当请求的前缀高度相似但又不完全相同（如多用户个性化 system prompt）时，radix tree 的节点分裂频率与内存开销如何随负载增长？</li>
+    </ul>
+  </div>
+
+  <div class="sec">
+    <h2>二、vLLM / PagedAttention（SOSP 2023）</h2>
+    <div class="kv">
+      <span><b>出处：</b>arXiv:2309.06180，SOSP 2023</span>
+      <span><b>关键词：</b>paged memory、block table、copy-on-write、显存碎片</span>
+    </div>
+    <h3>1. 它想解决什么问题</h3>
+    <p>高吞吐服务需要尽量<b>大的 batch</b>，而 batch 大小受限于 KV cache 占用的显存。既有系统的 KV cache 按序列<b>最大可能长度预分配连续显存</b>，产生两类浪费：</p>
+    <ul>
+      <li><b>内部碎片：</b>按最大长度预留，但实际生成长度短，预留部分闲置。</li>
+      <li><b>外部碎片：</b>不同长度序列反复申请释放，留下无法利用的空洞。</li>
+    </ul>
+    <p>此外，并行采样、beam search 等场景中不同序列会<b>重复保存相同的前缀 KV</b>，属于冗余复制。</p>
+    <h3>2. 核心方法</h3>
+    <ul>
+      <li><b>PagedAttention：</b>受操作系统<b>虚拟内存与分页</b>启发，把每个序列的 KV cache 切成<b>固定大小的 block</b>，block 在物理显存中<b>可以不连续</b>。</li>
+      <li><b>Block table：</b>为每个序列维护一张逻辑 block → 物理 block 的映射表，attention kernel 依此按块聚合读取。</li>
+      <li><b>按需分配：</b>只有实际用到的 block 才占用显存，因此内部碎片被限制在"最后一个 block 的未用部分"，浪费趋近于零。</li>
+      <li><b>灵活共享：</b>block 粒度的引用计数 + <b>写时复制（copy-on-write）</b>，使同一前缀的 KV 可被多个序列共享（并行采样、beam search 直接受益）。</li>
+    </ul>
+    <div class="take"><b>关键结论：</b>在相同延迟水平下，相比 FasterTransformer、Orca 等系统实现 <b>2~4× 的吞吐提升</b>；序列越长、模型越大、解码算法越复杂（如 beam search），提升越显著。</div>
+    <h3>3. 我的理解</h3>
+    <ul>
+      <li>PagedAttention 的定位是<b>内存管理算法</b>——它回答"KV 怎么放才能不浪费"，因此它是<b>后续一切复用机制得以成立的前提</b>。</li>
+      <li>它与 SGLang 的 paged KV 是<b>同一层次、同一类思想</b>；SGLang 的差异在于在此之上叠加了 radix tree 来做"任意长度边界"的前缀发现。</li>
+    </ul>
+  </div>
+
+  <div class="sec brk">
+    <h2>三、Mooncake FAST'25 Trace</h2>
+    <div class="kv"><span><b>出处：</b>github.com/kvcache-ai/Mooncake → <code>FAST25-release/arxiv-trace/mooncake_trace.jsonl</code></span></div>
+    <p>该 trace 来自真实生产环境，每条记录为一行 JSON，字段如下：</p>
+    <table>
+      <thead><tr><th style="width:18%">字段</th><th style="width:22%">含义</th><th>本次实验中的用法</th></tr></thead>
+      <tbody>
+        <tr><td><code>timestamp</code></td><td>请求到达时间</td><td>作为原始到达语义的参考（本次改为自行生成泊松到达时刻）</td></tr>
+        <tr><td><code>input_length</code></td><td>输入 token 数</td><td>决定 synthetic prompt 的目标长度</td></tr>
+        <tr><td><code>output_length</code></td><td>期望输出 token 数</td><td>决定 <code>max_tokens</code></td></tr>
+        <tr><td><code>hash_ids</code></td><td>前缀块的哈希 id 序列</td><td><b>关键观察：几乎所有记录都以 hash_ids[0] 开头</b>，说明存在被高频共享的公共前缀</td></tr>
+      </tbody>
+    </table>
+    <div class="take"><b>由 trace 结构得到的实验设计：</b>既然真实负载中的请求共享同一前缀块，本次实验就让所有采样请求共享一段<b>长度 512 token 的公共前缀</b>，再拼接各自独立的后缀。这样既忠实于 trace 的语义，又能真实触发 SGLang 的 RadixCache 前缀复用，从而在 CPU 上观测到"公共前缀只 prefill 一次"的效果。</div>
+    <p><b>采样方法：</b>用固定随机种子（seed=2026）从 trace 中随机抽取请求条数 N（本次 N=20，满足题目 10~30 条的要求），按 <code>input_length</code> / <code>output_length</code> 构造 prompt 与生成长度上限，再以<b>泊松过程</b>（相邻到达间隔服从指数分布，λ = 1/平均间隔）生成每个请求的发送时刻。记录 input tokens、output tokens、status、TTFT 与 latency。</p>
+
+    <h2>四、两条路线的关系与启发</h2>
+    <table>
+      <thead><tr><th style="width:20%">对比维度</th><th style="width:40%">PagedAttention（vLLM）</th><th>SGLang RadixAttention</th></tr></thead>
+      <tbody>
+        <tr><td><b>问题域</b></td><td>显存管理：碎片与冗余复制</td><td>计算复用：重复 prefill</td></tr>
+        <tr><td><b>抽象层次</b></td><td>物理层——KV 的布局与访存</td><td>逻辑层——前缀的发现、组织与调度</td></tr>
+        <tr><td><b>数据结构</b></td><td>block table + 哈希表</td><td>radix tree（支持节点分裂与共享）</td></tr>
+        <tr><td><b>复用粒度</b></td><td>block 对齐的精确匹配</td><td>最长前缀匹配，边界可任意（page=1 token 时最细）</td></tr>
+        <tr><td><b>关系</b></td><td colspan="2">互补而非替代：paged KV 是"能共享"的物理前提，RadixAttention 把共享转化为"计算省略"；vLLM 后续引入 Automatic Prefix Caching，两条路线正在收敛</td></tr>
+      </tbody>
+    </table>
+    <div class="take">
+      <b>对本挑战的启发（三条）：</b>
+      <ul style="margin-top:2px">
+        <li><b>系统优化要分层定位问题。</b>同样是"KV cache 优化"，PagedAttention 解决的是存储层浪费，RadixAttention 解决的是计算层重复。定位错层，方案就一定错。</li>
+        <li><b>好的优化是"把物理上的共享翻译成逻辑上的省略"。</b>分页让 KV 可共享只是必要条件，真正带来 TTFT 下降的是"跳过这段 prefill"这一计算决策。</li>
+        <li><b>参数即权衡。</b><code>--page-size</code> 一个旋钮同时牵动"前缀复用粒度"与"kernel 访存效率"——系统设计中很少有免费的参数，理解权衡比记住默认值更重要。</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
