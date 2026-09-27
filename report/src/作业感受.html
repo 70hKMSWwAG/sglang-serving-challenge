@@ -173,7 +173,7 @@
   <h2>四、最终结果</h2>
   <div class="box">
     在 WSL2 中<b>以纯 CPU 推理</b>（Intel Core Ultra 5 338H，12 vCPU；本机核显
-    Intel Arc B370 未在 WSL 中直通，故未参与计算），成功从源码构建 SGLang 0.5.14 并启动
+    Intel Arc B370 在 WSL 内缺 Intel 计算运行时，故未参与计算），成功从源码构建 SGLang 0.5.14 并启动
     OpenAI-compatible 服务，使用 Qwen3-0.6B，RadixCache 正常启用。<br>
     以 Mooncake FAST'25 trace 采样 20 条、泊松到达（λ = 0.5 req/s）压测：
     <b>成功率 20/20，总墙钟 72.8 s，TTFT 均值 2113.5 ms，输出吞吐 12.28 tok/s。</b>

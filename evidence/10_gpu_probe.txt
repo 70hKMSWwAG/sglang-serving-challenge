@@ -1,0 +1,58 @@
+==================== WSL 内 Intel GPU 可用性探测 ====================
+2026-09-27 18:00:38
+
+--- [1] DRM 设备节点 /dev/dri ---
+/dev/dri 不存在
+尝试加载 vgem 模块（Intel 官方 WSL 指南要求在缺失时执行）...
+modprobe: ERROR: could not insert 'vgem': Operation not permitted
+结论: 仍然没有 /dev/dri —— WSL 侧拿不到 GPU
+
+--- [2] DirectX 直通设备 /dev/dxg ---
+crw-rw-rw- 1 root root 10, 258 Sep 27 18:00 /dev/dxg
+结论: /dev/dxg 存在（说明 Windows 侧 dxgkrnl 已把 GPU 暴露给 WSL）
+
+--- [3] /usr/lib/wsl/lib（由 Windows 的 lxss\lib 挂载而来）---
+libd3d12.so
+libd3d12core.so
+libdxcore.so
+文件数: 3
+  有   libdxcore.so
+  有   libd3d12.so
+  有   libd3d12core.so
+  缺   libwsl_compute_helper.so
+
+--- [4] 当前用户与内核 ---
+whoami : l
+groups : l adm cdrom sudo dip plugdev users
+kernel : 6.18.33.2-microsoft-standard-WSL2
+vgem   : 0 (1=已加载)
+
+--- [5] Intel 计算运行时是否已安装 ---
+  缺   clinfo
+  缺   sycl-ls
+  缺   xpu-smi
+  缺   level-zero
+
+  OpenCL ICD 列表:
+    (无 /etc/OpenCL/vendors)
+
+  Level-Zero 库:
+    (未找到 libze*)
+
+--- [6] dmesg 中的 GPU 线索（若可读）---
+[    0.262660] hv_vmbus: registering driver dxgkrnl
+[    1.492845] misc dxg: dxgk: dxgkio_is_feature_enabled: Ioctl failed: -22
+[    1.494418] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.496548] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.497510] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.497934] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.498419] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.499119] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+[    1.502184] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.502798] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.503789] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.504921] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -2
+
+==================== 判定 ====================
+GPU 部分可用：/dev/dxg 在但 /dev/dri 缺 → 先 modprobe vgem，或装 Intel 计算运行时
+=============================================
