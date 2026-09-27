@@ -1,6 +1,7 @@
 # SGLang 在线推理服务挑战 —— 部署、验证与 Mooncake Trace 压测
 
-在**纯 CPU、无 GPU** 的 WSL2 环境中，从源码构建 **SGLang 0.5.14** 并启动
+在 WSL2 中**以纯 CPU 推理**（Intel Core Ultra 5 338H「Panther Lake」，12 vCPU；
+本机核显 Intel Arc B370 未在 WSL 中直通，故未参与计算），从源码构建 **SGLang 0.5.14** 并启动
 OpenAI-compatible 在线推理服务，使用 **Qwen/Qwen3-0.6B**，随后以
 **Mooncake FAST'25 trace** 采样构造 **泊松到达** 负载完成性能测试。
 
@@ -30,9 +31,9 @@ OpenAI-compatible 在线推理服务，使用 **Qwen/Qwen3-0.6B**，随后以
 |---|---|
 | 宿主 | Windows + WSL2 (Kernel 6.18.33.2) |
 | 发行版 | Ubuntu 26.04.1 LTS (Resolute Racoon) |
-| CPU | Intel Core Ultra 5 338H，**12 vCPU**（1 thread/core，1 NUMA node，**无 AVX-512 / 无 AMX**） |
-| 内存 | 15 GiB |
-| GPU | **无** |
+| CPU | Intel Core Ultra 5 338H（代号 **Panther Lake**），**12 vCPU**（1 thread/core，1 NUMA node，**无 AVX-512 / 无 AMX**） |
+| 内存 | 15 GiB（宿主物理内存 31.5 GB 板载 LPDDR5X-9600） |
+| 核显 | Intel **Arc B370**（10 Xe3 core，98 TOPS INT8）＋ NPU 47 TOPS INT8。**在 WSL 中不可见**（`lxss\lib` 为空，无 `/dev/dri`），故本次推理未使用 |
 | Python | 3.12.14（standalone，与发行版自带的 3.14 解耦） |
 | 关键版本 | SGLang **0.5.14** · Ray **2.56.0** · torch 2.12.0+cpu · transformers 5.8.1 |
 

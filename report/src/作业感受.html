@@ -79,8 +79,9 @@
     <li>
       <b>再确定"崩在什么指令上"。</b>用 <code>objdump -d</code> 反汇编那个 <code>.so</code>，
       统计出 <b>98672 处 <code>zmm</code> 寄存器引用</b>，即大量 AVX-512 指令。
-      查 <code>/proc/cpuinfo</code>：这颗 Intel Core Ultra 5 338H（Arrow Lake）<b>只有 AVX2，
-      没有 AVX-512，也没有 AMX</b> —— 指令集不匹配，SIGILL 完全解释了。
+      查 <code>/proc/cpuinfo</code>：这颗 Intel Core Ultra 5 338H（代号 Panther Lake，
+      Intel Core Ultra Series 3）<b>只有 AVX2 与 AVX-VNNI，没有 AVX-512，也没有 AMX</b>
+      —— 指令集不匹配，SIGILL 完全解释了。
     </li>
     <li>
       <b>再回到源码问"为什么会编成 AVX-512"。</b>在
@@ -171,7 +172,8 @@
 
   <h2>四、最终结果</h2>
   <div class="box">
-    在纯 CPU（12 vCPU，无 GPU）的 WSL2 环境中，成功从源码构建 SGLang 0.5.14 并启动
+    在 WSL2 中<b>以纯 CPU 推理</b>（Intel Core Ultra 5 338H，12 vCPU；本机核显
+    Intel Arc B370 未在 WSL 中直通，故未参与计算），成功从源码构建 SGLang 0.5.14 并启动
     OpenAI-compatible 服务，使用 Qwen3-0.6B，RadixCache 正常启用。<br>
     以 Mooncake FAST'25 trace 采样 20 条、泊松到达（λ = 0.5 req/s）压测：
     <b>成功率 20/20，总墙钟 72.8 s，TTFT 均值 2113.5 ms，输出吞吐 12.28 tok/s。</b>
