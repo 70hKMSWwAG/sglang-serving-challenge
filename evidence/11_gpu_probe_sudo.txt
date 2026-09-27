@@ -1,0 +1,59 @@
+==================== WSL 内 Intel GPU 可用性探测（第二轮 / 带 sudo） ====================
+2026-09-27 18:25
+
+--- [1] sudo modprobe vgem && ls -l /dev/dri ---
+total 0
+crw-rw---- 1 root video  226,   0 Sep 27 18:24 card0
+crw-rw---- 1 root render 226, 128 Sep 27 18:24 renderD128
+
+  说明：第一轮报 "Operation not permitted" 是因为脚本里的 modprobe 没加 sudo，
+  并非内核不支持。补上 sudo 后模块加载成功，/dev/dri 随即出现两个节点。
+  但 dmesg 明确指出这两个节点来自 vgem：
+
+      [ 1441.420102] [drm] Initialized vgem 1.0.0 for vgem on minor 0
+
+  vgem 是内核自带的「虚拟 GEM 提供者」（纯软件桩，无任何硬件后端），
+  常被用来在无显卡环境下提供 /dev/dri 节点（DRM 子系统测试、虚拟机场景）。
+  **它不等于 Intel 核显**：整段 dmesg 中没有任何 i915 / xe（Intel DRM 驱动）
+  的初始化记录。因此 card0 / renderD128 不能用于 GPU 计算。
+
+--- [2] sudo dmesg | grep -iE 'dxg|vgem|drm' ---
+[    0.239553] ACPI: bus type drm_connector registered
+[    0.262660] hv_vmbus: registering driver dxgkrnl
+[    1.492845] misc dxg: dxgk: dxgkio_is_feature_enabled: Ioctl failed: -22
+[    1.494418] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.496548] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.497510] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.497934] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.498419] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.499119] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.502184] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.502798] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.503789] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[    1.504921] misc dxg: dxgk: dxgkio_query_adapter_info: Ioctl failed: -22
+[ 1441.420102] [drm] Initialized vgem 1.0.0 for vgem on minor 0
+
+  说明：-22 = EINVAL。11 条全部出现在开机后 1.49~1.50 s，即 dxgkrnl 向
+  Windows 宿主查询适配器信息阶段；此后（含整个推理 benchmark 期间）再无新增。
+  结合 dxgkio_is_feature_enabled 同样失败，可判断 WSL 侧的 dxgkrnl 与
+  Windows 显卡驱动之间的握手并未走通。
+
+--- [3] 计算运行时 ---
+$ command -v clinfo sycl-ls level-zero
+计算运行时未安装
+
+--- [4] /usr/lib/wsl/lib ---
+libd3d12.so  libd3d12core.so  libdxcore.so
+
+  （仍为 3 个文件，无 libwsl_compute_helper.so —— 即 Level-Zero/OpenCL
+    这类「计算」通路所需的库并不在这里）
+
+==================== 判定 ====================
+GPU 计算通路【不可用】，且不是「装个包就能补上」的缺件问题：
+  1. /dev/dri 下的 card0/renderD128 来自 vgem 软件桩，非 Intel 核显；
+  2. dmesg 显示 dxgkrnl ↔ Windows 驱动的适配器查询持续 EINVAL，握手未通；
+  3. 无任何 Intel 计算运行时，也无 libwsl_compute_helper.so 这类计算桥接库。
+
+结论：本次纯 CPU 推理的路线选择成立；核显（Arc B370）在本机 WSL 内
+无法用于推理加速，未再投入 XPU 重编译。
+=============================================

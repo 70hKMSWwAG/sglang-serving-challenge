@@ -1,39 +1,64 @@
 #!/usr/bin/env bash
 # =============================================================================
-# 07_probe_gpu.sh —— 探测 WSL 内 Intel Arc B370 核显的可用性
+# 07_probe_gpu.sh —— 探测 WSL 内 Intel Arc B370 核显能否用于 AI 推理
 #
-# 只读探测，不安装任何东西、不改任何配置。用于判断「能否走 SGLang XPU 路线」。
-# 用法： bash /mnt/d/first-task/wsl/07_probe_gpu.sh
+# 说明：本脚本会尝试加载 vgem 模块（只往内核插一个模块，重启即失效、
+#       不改任何配置文件），其余步骤全部只读。不会安装任何软件包。
+# 用法： bash /mnt/d/first-task/wsl/07_probe_gpu.sh 2>&1 | tee /mnt/d/first-task/work/gpu_probe.txt
+#
+# 第二轮实测（2026-09-27 18:25）结论已固化在 evidence/11_gpu_probe_sudo.txt。
 # =============================================================================
 
 set -o pipefail
+
+# sudo 前缀：能免密就用，否则尝试交互；都没有则空跑
+if [ "$(id -u)" = "0" ]; then SUDO=""
+elif command -v sudo >/dev/null 2>&1; then SUDO="sudo"
+else SUDO=""
+fi
 
 echo "==================== WSL 内 Intel GPU 可用性探测 ===================="
 date '+%F %T'
 echo
 
-# ---------------------------------------------------------------- 1. 设备节点
+# ------------------------------------------------- 1. 真实 Intel DRM 驱动是否加载
+echo "--- [0] Intel 内核 DRM 驱动 / 模块 ---"
+for m in i915 xe; do
+  if [ -d "/sys/module/$m" ]; then echo "  已加载  $m"; else echo "  未加载  $m"; fi
+done
+echo
+
+# ---------------------------------------------------------------- 2. 设备节点
 echo "--- [1] DRM 设备节点 /dev/dri ---"
+if [ ! -d /dev/dri ]; then
+  echo "/dev/dri 不存在 —— 尝试加载 vgem（需 root 权限，缺 sudo 会报 Operation not permitted）"
+  $SUDO modprobe vgem 2>&1 | head -3
+fi
+
 if [ -d /dev/dri ]; then
   ls -la /dev/dri
-  echo "结论: /dev/dri 存在"
+  echo
+  echo "  节点归属判定（关键：/dev/dri 存在 ≠ 有 GPU）:"
+  for n in /sys/class/drm/card*/device/driver; do
+    [ -e "$n" ] || continue
+    dev=$(echo "$n" | cut -d/ -f5)
+    drv=$(basename "$(readlink -f "$n")")
+    echo "    $dev 由驱动 '$drv' 提供"
+  done
+  echo "    dmesg 中的初始化记录:"
+  $SUDO dmesg 2>/dev/null | grep -iE 'initialized .*(drm|vgem|i915|xe)' | tail -6 | sed 's/^/      /'
+  echo
+  echo "  判定：若驱动为 vgem / platform → 这是**虚拟软件桩**，不能用于计算；"
+  echo "        只有出现 i915 / xe 才是真实 Intel 核显。"
 else
-  echo "/dev/dri 不存在"
-  echo "尝试加载 vgem 模块（Intel 官方 WSL 指南要求在缺失时执行）..."
-  modprobe vgem 2>&1 | head -3
-  if [ -d /dev/dri ]; then
-    ls -la /dev/dri
-    echo "结论: modprobe vgem 后 /dev/dri 出现"
-  else
-    echo "结论: 仍然没有 /dev/dri —— WSL 侧拿不到 GPU"
-  fi
+  echo "结论: 仍然没有 /dev/dri"
 fi
 echo
 
 echo "--- [2] DirectX 直通设备 /dev/dxg ---"
 if [ -e /dev/dxg ]; then
   ls -la /dev/dxg
-  echo "结论: /dev/dxg 存在（说明 Windows 侧 dxgkrnl 已把 GPU 暴露给 WSL）"
+  echo "结论: /dev/dxg 存在（Windows 侧 dxgkrnl 已把 GPU 暴露给 WSL）"
 else
   echo "结论: /dev/dxg 不存在"
 fi
@@ -77,18 +102,30 @@ echo
 
 # ---------------------------------------------------------------- 6. 内核日志线索
 echo "--- [6] dmesg 中的 GPU 线索（若可读）---"
-(dmesg 2>/dev/null | grep -iE 'dxg|vgem|drm|i915|xe ' | tail -12) || echo "(dmesg 不可读，需要 root)"
+($SUDO dmesg 2>/dev/null | grep -iE 'dxg|vgem|drm|i915|xe ' | tail -12) || echo "(dmesg 不可读)"
+echo
+echo "  -22 = EINVAL。dxgkio_query_adapter_info 持续失败，说明 WSL 的 dxgkrnl"
+echo "  与 Windows 显卡驱动之间的适配器查询并未走通。"
 echo
 
 # -------------------------------------------------------------------- 7. 结论
 echo "==================== 判定 ===================="
-if [ -e /dev/dxg ] && [ -d /dev/dri ]; then
-  echo "GPU 直通【可用】→ 可以继续尝试 SGLang XPU 路线"
+REAL_DRV=""
+for m in i915 xe; do
+  [ -d "/sys/module/$m" ] && REAL_DRV="$m"
+done
+HAS_CRT=0
+command -v clinfo >/dev/null 2>&1 && HAS_CRT=1
+
+if [ -n "$REAL_DRV" ] && [ -e /dev/dxg ]; then
+  echo "GPU 直通【可用】：真实 Intel DRM 驱动 ($REAL_DRV) 已加载 → 可继续评估 XPU 路线"
+elif [ -d /dev/dri ] && [ -z "$REAL_DRV" ]; then
+  echo "GPU 计算【不可用】：/dev/dri 下的节点来自 vgem 虚拟桩（无 i915/xe），不能计算"
+  echo "  且计算运行时$([ $HAS_CRT = 1 ] && echo '存在' || echo '缺失')、dxgkrnl 握手报 EINVAL。"
+  echo "  → 纯 CPU 推理的路线选择成立，不建议再投入 XPU 重编译。"
 elif [ -e /dev/dxg ]; then
-  echo "GPU 部分可用：/dev/dxg 在但 /dev/dri 缺 → 先 modprobe vgem，或装 Intel 计算运行时"
+  echo "GPU 部分可用：/dev/dxg 在但 /dev/dri 缺 → 无真实 Intel DRM 驱动"
 else
   echo "GPU 直通【不可用】：/dev/dxg 缺失 → 需在 Windows 侧重装/更新 Intel 显卡驱动"
-  echo "  若 /dev/dxg 在而 /dev/dri 缺：缺的是 DRM 节点与计算运行时，"
-  echo "  应装 Intel 的 WSL 计算组件（Level-Zero / OpenCL），不是重装显卡驱动。"
 fi
 echo "============================================="

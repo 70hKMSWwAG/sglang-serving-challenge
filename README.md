@@ -33,7 +33,7 @@ OpenAI-compatible 在线推理服务，使用 **Qwen/Qwen3-0.6B**，随后以
 | 发行版 | Ubuntu 26.04.1 LTS (Resolute Racoon) |
 | CPU | Intel Core Ultra 5 338H（代号 **Panther Lake**），**12 vCPU**（1 thread/core，1 NUMA node，**无 AVX-512 / 无 AMX**） |
 | 内存 | 15 GiB（宿主物理内存 31.5 GB 板载 LPDDR5X-9600） |
-| 核显 | Intel **Arc B370**（10 Xe3 core，98 TOPS INT8）＋ NPU 47 TOPS INT8。WSL 内 `/dev/dxg` 与 D3D12 翻译库（`libd3d12.so`/`libdxcore.so`）**已就位**，但 `/dev/dri` 缺失（`modprobe vgem` 被拒）、且无任何 Intel 计算运行时（Level-Zero / OpenCL / SYCL），故本次推理未使用。取证见 `evidence/10_gpu_probe.txt` |
+| 核显 | Intel **Arc B370**（10 Xe3 core，98 TOPS INT8）＋ NPU 47 TOPS INT8。WSL 内 `/dev/dxg` 与 D3D12 翻译库（`libd3d12.so`/`libdxcore.so`）**已就位**，但**无 i915 / xe 内核 DRM 驱动**：`/dev/dri` 下的 `card0`/`renderD128` 由内核自带的 `vgem` 虚拟桩提供（`dmesg`：`Initialized vgem 1.0.0 for vgem on minor 0`），并不能用于计算；同时无任何 Intel 计算运行时（Level-Zero / OpenCL / SYCL），且 `dxgkio_query_adapter_info` 持续返回 EINVAL，故本次推理未使用核显。取证见 `evidence/10_gpu_probe.txt` 与 `evidence/11_gpu_probe_sudo.txt` |
 | Python | 3.12.14（standalone，与发行版自带的 3.14 解耦） |
 | 关键版本 | SGLang **0.5.14** · Ray **2.56.0** · torch 2.12.0+cpu · transformers 5.8.1 |
 
