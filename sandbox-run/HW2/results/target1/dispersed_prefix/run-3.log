@@ -1,0 +1,74 @@
+[self-check] dispersed_prefix: 前几条请求与第 1 条请求的最长公共前缀长度 = [0, 0, 0, 0, 0] (共享组应≈896，分散组应≈0)
+[flush] idle=True msg='Cache flushed.'
+[dispersed_prefix][05] status=200 ttft=18.073s e2e=27.123s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][06] status=200 ttft=18.073s e2e=27.123s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][04] status=200 ttft=18.073s e2e=27.124s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][03] status=200 ttft=18.074s e2e=27.124s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][07] status=200 ttft=18.072s e2e=27.123s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][02] status=200 ttft=18.074s e2e=27.124s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][01] status=200 ttft=18.074s e2e=27.125s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][00] status=200 ttft=17.475s e2e=27.125s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][09] status=200 ttft=18.720s e2e=27.778s prompt=1024 cached=12 prefill=1012 out=16
+[dispersed_prefix][08] status=200 ttft=18.128s e2e=27.779s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][10] status=200 ttft=18.720s e2e=27.778s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][11] status=200 ttft=18.720s e2e=27.778s prompt=1024 cached=27 prefill=997 out=16
+[dispersed_prefix][12] status=200 ttft=18.720s e2e=27.778s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][13] status=200 ttft=18.720s e2e=27.778s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][14] status=200 ttft=18.720s e2e=27.778s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][15] status=200 ttft=18.720s e2e=27.778s prompt=1024 cached=11 prefill=1013 out=16
+[dispersed_prefix][17] status=200 ttft=19.224s e2e=28.453s prompt=1024 cached=12 prefill=1012 out=16
+[dispersed_prefix][16] status=200 ttft=18.615s e2e=28.454s prompt=1024 cached=10 prefill=1014 out=16
+[dispersed_prefix][18] status=200 ttft=19.224s e2e=28.453s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][19] status=200 ttft=19.224s e2e=28.453s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][20] status=200 ttft=19.223s e2e=28.453s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][21] status=200 ttft=19.223s e2e=28.453s prompt=1024 cached=13 prefill=1011 out=16
+[dispersed_prefix][22] status=200 ttft=19.223s e2e=28.453s prompt=1024 cached=13 prefill=1011 out=16
+[dispersed_prefix][23] status=200 ttft=19.223s e2e=28.453s prompt=1024 cached=12 prefill=1012 out=16
+[dispersed_prefix][25] status=200 ttft=18.567s e2e=27.584s prompt=1024 cached=0 prefill=1024 out=16
+[dispersed_prefix][24] status=200 ttft=17.970s e2e=27.584s prompt=1024 cached=11 prefill=1013 out=16
+[dispersed_prefix][26] status=200 ttft=18.567s e2e=27.584s prompt=1024 cached=10 prefill=1014 out=16
+[dispersed_prefix][27] status=200 ttft=18.566s e2e=27.584s prompt=1024 cached=11 prefill=1013 out=16
+[dispersed_prefix][28] status=200 ttft=18.566s e2e=27.584s prompt=1024 cached=13 prefill=1011 out=16
+[dispersed_prefix][29] status=200 ttft=18.566s e2e=27.583s prompt=1024 cached=15 prefill=1009 out=16
+[dispersed_prefix][30] status=200 ttft=18.566s e2e=27.583s prompt=1024 cached=15 prefill=1009 out=16
+[dispersed_prefix][31] status=200 ttft=18.566s e2e=27.583s prompt=1024 cached=0 prefill=1024 out=16
+
+===== SUMMARY =====
+{
+  "group": "dispersed_prefix",
+  "run_id": "run-3",
+  "timestamp": "2026-10-03 01:51:17",
+  "server_url": "http://127.0.0.1:30000",
+  "model": "/workspace/models/Qwen3-0.6B",
+  "config": {
+    "num_requests": 32,
+    "concurrency": 8,
+    "input_len": 1024,
+    "prefix_len": 896,
+    "max_new_tokens": 16,
+    "temperature": 0,
+    "ignore_eos": true,
+    "sampling_seed": 2026,
+    "interface": "native /generate with input_ids, stream=true"
+  },
+  "success_rate": 1.0,
+  "num_success": 32,
+  "num_total": 32,
+  "wall_clock_s": 110.941,
+  "request_throughput_rps": 0.2884,
+  "output_token_throughput_tps": 4.615,
+  "total_prompt_tokens": 32768,
+  "total_cached_tokens": 185,
+  "total_actual_prefill_tokens": 32583,
+  "cache_hit_rate": 0.0056,
+  "avg_cached_tokens_per_request": 5.78,
+  "avg_actual_prefill_tokens_per_request": 1018.22,
+  "ttft_p50_s": 18.5666,
+  "ttft_p95_s": 19.2236,
+  "tpot_p50_s": 0.6038,
+  "tpot_p95_s": 0.6433,
+  "e2e_p50_s": 27.681,
+  "e2e_p95_s": 28.4531
+}
+
+results written to /workspace/HW2/results/target1/dispersed_prefix/run-3

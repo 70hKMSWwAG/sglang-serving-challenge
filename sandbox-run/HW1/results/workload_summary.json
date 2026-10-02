@@ -1,0 +1,16 @@
+{
+  "num_requests": 24,
+  "num_success": 24,
+  "success_rate": 1.0,
+  "wall_clock_s": 363.029,
+  "mean_interval_s": 18.0,
+  "total_input_tokens": 27831,
+  "total_output_tokens": 1288,
+  "output_token_throughput_tps": 3.548,
+  "ttft_mean_s": 2.658,
+  "ttft_p50_s": 2.197,
+  "ttft_p95_s": 4.138,
+  "latency_mean_s": 13.848,
+  "latency_p50_s": 10.425,
+  "latency_p95_s": 26.327
+}

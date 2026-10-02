@@ -1,0 +1,75 @@
+[self-check] shared_prefix: 前几条请求与第 1 条请求的最长公共前缀长度 = [896, 896, 896, 896, 896] (共享组应≈896，分散组应≈0)
+[flush] idle=True msg='Cache flushed.'
+[prefix-warmup] status=200 prompt=896 cached=0 (不计入结果)
+[shared_prefix][06] status=200 ttft=6.772s e2e=15.683s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][05] status=200 ttft=6.772s e2e=15.684s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][04] status=200 ttft=6.772s e2e=15.684s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][03] status=200 ttft=6.773s e2e=15.684s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][02] status=200 ttft=6.773s e2e=15.685s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][01] status=200 ttft=6.773s e2e=15.685s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][00] status=200 ttft=6.178s e2e=15.685s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][07] status=200 ttft=6.771s e2e=15.683s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][08] status=200 ttft=5.781s e2e=15.177s prompt=1024 cached=909 prefill=115 out=16
+[shared_prefix][09] status=200 ttft=6.361s e2e=15.177s prompt=1024 cached=909 prefill=115 out=16
+[shared_prefix][10] status=200 ttft=6.361s e2e=15.177s prompt=1024 cached=1001 prefill=23 out=16
+[shared_prefix][11] status=200 ttft=6.361s e2e=15.177s prompt=1024 cached=909 prefill=115 out=16
+[shared_prefix][12] status=200 ttft=6.360s e2e=15.177s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][13] status=200 ttft=6.360s e2e=15.177s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][14] status=200 ttft=6.360s e2e=15.176s prompt=1024 cached=1001 prefill=23 out=16
+[shared_prefix][15] status=200 ttft=6.360s e2e=15.176s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][16] status=200 ttft=5.856s e2e=15.228s prompt=1024 cached=919 prefill=105 out=16
+[shared_prefix][17] status=200 ttft=6.459s e2e=15.228s prompt=1024 cached=909 prefill=115 out=16
+[shared_prefix][18] status=200 ttft=6.459s e2e=15.228s prompt=1024 cached=924 prefill=100 out=16
+[shared_prefix][19] status=200 ttft=6.459s e2e=15.228s prompt=1024 cached=1001 prefill=23 out=16
+[shared_prefix][20] status=200 ttft=6.459s e2e=15.228s prompt=1024 cached=922 prefill=102 out=16
+[shared_prefix][21] status=200 ttft=6.459s e2e=15.228s prompt=1024 cached=907 prefill=117 out=16
+[shared_prefix][22] status=200 ttft=6.459s e2e=15.228s prompt=1024 cached=911 prefill=113 out=16
+[shared_prefix][23] status=200 ttft=6.459s e2e=15.228s prompt=1024 cached=911 prefill=113 out=16
+[shared_prefix][24] status=200 ttft=5.792s e2e=15.302s prompt=1024 cached=908 prefill=116 out=16
+[shared_prefix][25] status=200 ttft=6.373s e2e=15.301s prompt=1024 cached=907 prefill=117 out=16
+[shared_prefix][26] status=200 ttft=6.373s e2e=15.301s prompt=1024 cached=1011 prefill=13 out=16
+[shared_prefix][27] status=200 ttft=6.373s e2e=15.301s prompt=1024 cached=1001 prefill=23 out=16
+[shared_prefix][28] status=200 ttft=6.373s e2e=15.301s prompt=1024 cached=896 prefill=128 out=16
+[shared_prefix][29] status=200 ttft=6.373s e2e=15.301s prompt=1024 cached=909 prefill=115 out=16
+[shared_prefix][30] status=200 ttft=6.373s e2e=15.301s prompt=1024 cached=907 prefill=117 out=16
+[shared_prefix][31] status=200 ttft=6.373s e2e=15.301s prompt=1024 cached=896 prefill=128 out=16
+
+===== SUMMARY =====
+{
+  "group": "shared_prefix",
+  "run_id": "run-1",
+  "timestamp": "2026-10-03 01:42:55",
+  "server_url": "http://127.0.0.1:30000",
+  "model": "/workspace/models/Qwen3-0.6B",
+  "config": {
+    "num_requests": 32,
+    "concurrency": 8,
+    "input_len": 1024,
+    "prefix_len": 896,
+    "max_new_tokens": 16,
+    "temperature": 0,
+    "ignore_eos": true,
+    "sampling_seed": 2026,
+    "interface": "native /generate with input_ids, stream=true"
+  },
+  "success_rate": 1.0,
+  "num_success": 32,
+  "num_total": 32,
+  "wall_clock_s": 61.393,
+  "request_throughput_rps": 0.5212,
+  "output_token_throughput_tps": 8.34,
+  "total_prompt_tokens": 32768,
+  "total_cached_tokens": 29424,
+  "total_actual_prefill_tokens": 3344,
+  "cache_hit_rate": 0.8979,
+  "avg_cached_tokens_per_request": 919.5,
+  "avg_actual_prefill_tokens_per_request": 104.5,
+  "ttft_p50_s": 6.3733,
+  "ttft_p95_s": 6.7727,
+  "tpot_p50_s": 0.5941,
+  "tpot_p95_s": 0.6298,
+  "e2e_p50_s": 15.2644,
+  "e2e_p95_s": 15.6848
+}
+
+results written to /workspace/HW2/results/target1/shared_prefix/run-1

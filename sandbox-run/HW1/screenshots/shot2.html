@@ -1,0 +1,64 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+body { margin: 0; background: #fff; font-family: "Noto Sans Mono CJK SC", monospace; }
+.term { background: #16181d; border-radius: 10px; padding: 0 0 14px 0; width: 1060px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+.bar { background: #2a2d33; border-radius: 10px 10px 0 0; padding: 9px 14px; display: flex; gap: 7px; align-items:center; }
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.r { background: #ff5f57; } .y { background: #febc2e; } .g { background: #28c840; }
+.title { color: #9aa0a8; font-size: 12.5px; margin-left: 10px; }
+.pre { padding: 12px 18px 0 18px; font-size: 12.6px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; color: #d6dbe2; }
+.cmd { color: #7ee787; }
+.cmd .dollar { color: #ff7b72; font-weight: 700; }
+.dim { color: #8b949e; }
+</style></head>
+<body><div class="term">
+<div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+<span class="title">HW1 截图 2 — Mooncake trace 采样 workload 回放（24 条请求，Poisson 到达）</span></div>
+<div class="pre"><span class="cmd"><span class="dollar">$</span> python3 mooncake_workload.py --num-requests 24 --mean-interval 18.0
+# 从 Mooncake FAST&#x27;25 arxiv-trace (23,608 条) 中采样 24 条真实记录
+# (input_length&lt;=2048, output_length&lt;=128 窗口)，按 input_length 构造 synthetic prompt，
+# Poisson 到达（指数间隔，均值 18s），发送到 SGLang OpenAI 兼容服务并逐请求记录指标</span>
+<span>[trace] 候选记录 569 条，采样 24 条 (input&lt;=2048, output&lt;=128)
+[00] send=   7.79s status=200 in=1009 out=39 ttft=2.154 latency=7.075
+[01] send=  36.24s status=200 in=1443 out=38 ttft=4.171 latency=14.041
+[02] send=  58.02s status=200 in=1454 out=116 ttft=1.677 latency=33.065
+[04] send=  59.77s status=200 in=894 out=8 ttft=2.059 latency=3.597
+[03] send=  62.24s status=200 in=1340 out=100 ttft=1.331 latency=26.11
+[05] send=  89.86s status=200 in=1295 out=16 ttft=3.064 latency=5.28
+[06] send=  99.95s status=200 in=994 out=20 ttft=2.132 latency=4.557
+[08] send= 117.12s status=200 in=903 out=32 ttft=3.361 latency=8.971
+[07] send= 131.95s status=200 in=898 out=89 ttft=3.521 latency=24.138
+[10] send= 136.87s status=200 in=1193 out=35 ttft=2.598 latency=10.14
+[09] send= 137.63s status=200 in=895 out=77 ttft=1.919 latency=19.283
+[11] send= 184.29s status=200 in=1524 out=96 ttft=3.535 latency=23.072
+[12] send= 193.60s status=200 in=908 out=102 ttft=2.205 latency=18.2
+[14] send= 223.41s status=200 in=897 out=22 ttft=2.15 latency=12.423
+[15] send= 224.49s status=200 in=1926 out=18 ttft=4.797 latency=10.006
+[13] send= 227.11s status=200 in=957 out=110 ttft=1.988 latency=26.365
+[16] send= 257.09s status=200 in=911 out=52 ttft=1.899 latency=8.305
+[17] send= 284.99s status=200 in=1445 out=14 ttft=3.221 latency=5.326
+[18] send= 298.61s status=200 in=918 out=23 ttft=1.882 latency=10.491
+[20] send= 305.93s status=200 in=1312 out=1 ttft=3.075 latency=3.075
+[19] send= 313.33s status=200 in=1622 out=91 ttft=3.954 latency=23.407
+[21] send= 325.55s status=200 in=1062 out=61 ttft=2.19 latency=10.36
+[22] send= 362.04s status=200 in=973 out=115 ttft=2.047 latency=20.224
+[23] send= 363.03s status=200 in=1058 out=13 ttft=2.85 latency=4.843
+===== WORKLOAD SUMMARY =====
+{
+  &quot;num_requests&quot;: 24,
+  &quot;num_success&quot;: 24,
+  &quot;success_rate&quot;: 1.0,
+  &quot;wall_clock_s&quot;: 363.029,
+  &quot;mean_interval_s&quot;: 18.0,
+  &quot;total_input_tokens&quot;: 27831,
+  &quot;total_output_tokens&quot;: 1288,
+  &quot;output_token_throughput_tps&quot;: 3.548,
+  &quot;ttft_mean_s&quot;: 2.658,
+  &quot;ttft_p50_s&quot;: 2.197,
+  &quot;ttft_p95_s&quot;: 4.138,
+  &quot;latency_mean_s&quot;: 13.848,
+  &quot;latency_p50_s&quot;: 10.425,
+  &quot;latency_p95_s&quot;: 26.327
+}
+CSV: /workspace/HW1/results/workload_results.csv</span></div>
+</div></body></html>
