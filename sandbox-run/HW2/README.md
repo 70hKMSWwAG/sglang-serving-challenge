@@ -52,7 +52,7 @@ python3 -m sglang.launch_server \
 | 路径 | 用途 |
 | --- | --- |
 | `src/target1/run_benchmark.py` | 任务一基准：一组 32 条请求、并发 8，原生 `/generate` 提交 `input_ids` + 流式响应；负责服务预热、等待空闲、`/flush_cache` 确认、共享前缀组预热请求、逐请求采集指标 |
-| `src/target1/aggregate.py` | 汇总 run-1/2/3，生成 `results/target1/summary.{md,json}`（主表与逐轮明细） |
+| `src/target1/aggregate.py` | 汇总 run-{1,2,3}，生成 `results/target1/summary.{md,json}`（主表与逐轮明细） |
 | `src/make_report.py` | 生成 `report.pdf`（正文 6 页）：实验表格、公式图、流程图页与源码说明 |
 
 ```bash
@@ -87,7 +87,7 @@ results/target1/
 | report.pdf 中的内容 | 数据来源 |
 | --- | --- |
 | 1.2 对照主表（三轮均值） | `results/target1/summary.json` 的 `mean` 字段（由 `aggregate.py` 汇总） |
-| 1.4 逐轮明细表 | `results/target1/summary.json` 的 `per_run` 字段；即各组 `run-1/2/3/summary.json` |
+| 1.4 逐轮明细表 | `results/target1/summary.json` 的 `per_run` 字段；即各组 `run-{1,2,3}/summary.json` |
 | 1.4 的单请求口径数字（TTFT/TPOT/prefill token） | `results/target1/{组}/run-N/per_request.jsonl`（每行一条请求） |
 | 2 流程图 | 矢量源文件 `figures/request_flow.svg`（生成脚本 `tools/gen_flowcharts.py`，随本目录一并打包） |
 | 3.1 函数与行号表、3.2 回答 | 对照本地 `sglang 0.5.14` 源码（`site-packages/sglang/srt/...`）逐条核对 |
