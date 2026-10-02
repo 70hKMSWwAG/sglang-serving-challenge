@@ -21,6 +21,8 @@ INCLUDE_FILES = [
     "README.md", "report.pdf", "作业感受.pdf", "AI 使用说明情况（第二次挑战）.pdf",
 ]
 INCLUDE_DIRS = ["src", "results", "figures", "scripts"]
+# 只打包流程图生成脚本：README 会引用它，避免解压后出现悬空引用
+EXTRA_FILES = [("tools/gen_flowcharts.py", "tools/gen_flowcharts.py")]
 EXCLUDE = {"__pycache__", "build", ".git", ".DS_Store", "*.pyc"}
 
 
@@ -53,6 +55,15 @@ def main():
             copy_filtered(p, target / d)
         else:
             print("MISSING DIR:", d)
+
+    for rel_src, rel_dst in EXTRA_FILES:
+        p = Path("/workspace") / rel_src
+        if p.exists():
+            dst = target / rel_dst
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(p, dst)
+        else:
+            print("MISSING:", rel_src)
 
     if OUT.exists():
         OUT.unlink()

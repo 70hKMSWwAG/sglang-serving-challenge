@@ -89,7 +89,7 @@ results/target1/
 | 1.2 对照主表（三轮均值） | `results/target1/summary.json` 的 `mean` 字段（由 `aggregate.py` 汇总） |
 | 1.4 逐轮明细表 | `results/target1/summary.json` 的 `per_run` 字段；即各组 `run-1/2/3/summary.json` |
 | 1.4 的单请求口径数字（TTFT/TPOT/prefill token） | `results/target1/{组}/run-N/per_request.jsonl`（每行一条请求） |
-| 2 流程图 | `figures/request_flow.svg`（由 `tools/gen_flowcharts.py` 生成，仓库根目录 `tools/`） |
+| 2 流程图 | 矢量源文件 `figures/request_flow.svg`（生成脚本 `tools/gen_flowcharts.py`，随本目录一并打包） |
 | 3.1 函数与行号表、3.2 回答 | 对照本地 `sglang 0.5.14` 源码（`site-packages/sglang/srt/...`）逐条核对 |
 
 ## 7. 主要结论（摘要）
