@@ -9,7 +9,7 @@ WSL2（真机 12 vCPU / 15 GiB）版本**并存、互不覆盖**：
 | 系统 | Ubuntu 26.04（WSL2） | Ubuntu 22.04 |
 | SGLang 0.5.14 | 源码构建，CPU 后端需 AVX-512 补丁 | pip 安装，`SGLANG_USE_CPU_ENGINE=1` 启用 CPU 引擎 |
 | HW1 交付 | `deliverables/` 六份 PDF | `sandbox-run/HW1/` 六份 PDF + 数据 + 脚本 |
-| HW2 交付 | `HW2-林彦超.zip`（输入 2112 tok，前缀 2048+64） | `sandbox-run/HW2-林彦超.zip`（输入 1024 tok，前缀 896+128） |
+| HW2 交付 | `HW2-0102603133.zip`（输入 2112 tok，前缀 2048+64） | `sandbox-run/HW2-0102603133.zip`（输入 1024 tok，前缀 896+128） |
 
 两版结论一致：**共享前缀组命中率大幅更高、实际 Prefill token 大幅更少、TTFT 显著下降、TPOT 基本不变**。
 绝对数值不可直接互比（CPU 核数、KV 池大小、输入长度都不同）。
@@ -79,6 +79,6 @@ sandbox-run/
 ├── README.md                  # 本文件
 ├── HW1/                       # 第一次挑战全套（六份 PDF + data/ + scripts/ + results/ + screenshots/）
 ├── HW2/                       # 第二次挑战全套（report.pdf + src/ + results/ + figures/ + scripts/）
-├── HW2-林彦超.zip              # 按任务书要求打包（解压后仅含同名根目录）
+├── HW2-0102603133.zip              # 按任务书要求打包（解压后仅含同名根目录）
 └── tools/                     # 流程图生成 / HW2 打包脚本
 ```
