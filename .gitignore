@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+sglenv/
+*.egg-info/
+
+# Models & large data (not tracked)
+models/
+*.safetensors
+*.bin
+
+# Runtime / logs
+*.log
+!evidence/*.log
+!HW1/results/*.log
+sglang_server.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+
+# Temp build
+_pack/
+_tmp/

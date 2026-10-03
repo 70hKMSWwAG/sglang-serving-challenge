@@ -2,9 +2,15 @@
 import json, random, time, urllib.request, os
 from concurrent.futures import ThreadPoolExecutor
 
-BASE = "http://127.0.0.1:30000"
-TRACE = os.path.expanduser("~/hw1/mooncake_trace.jsonl")
-OUT = os.path.expanduser("~/hw1/results/workload_results.jsonl")
+BASE = os.environ.get("SGLANG_URL", "http://127.0.0.1:30000")
+# Trace / output lookup: env var > repo-relative path > legacy ~/hw1 path (compat)
+_REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TRACE = os.environ.get("MOONCAKE_TRACE") or next(
+    (p for p in [os.path.join(_REPO, "results", "mooncake_trace.jsonl"),
+                 os.path.join(_REPO, "..", "sandbox-run", "HW1", "data", "mooncake_trace.jsonl"),
+                 os.path.expanduser("~/hw1/mooncake_trace.jsonl")] if os.path.exists(p)),
+    os.path.join(_REPO, "results", "mooncake_trace.jsonl"))
+OUT = os.environ.get("WORKLOAD_OUT") or os.path.join(_REPO, "results", "workload_results.jsonl")
 N, LAMBDA, SEED, MAX_IN, MAX_OUT = 20, 0.5, 2026, 2048, 64
 
 random.seed(SEED)

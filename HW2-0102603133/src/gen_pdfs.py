@@ -60,7 +60,11 @@ def make_pdf(path, title, sections, table=None, extra_table=None):
     print('saved', path)
 
 # ================= HW1 =================
-hw1 = '/home/agentuser/hw1/deliverables'
+# Base dirs: prefer repo-relative paths (portable), fallback to legacy absolute paths
+_REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+hw1 = os.path.join(_REPO, '..', 'HW1', 'deliverables')
+if not os.path.isdir('/workspace/HW1/deliverables'):
+    hw1 = '/home/agentuser/hw1/deliverables'  # legacy compat
 make_pdf(f'{hw1}/流程图.pdf', 'HW1-3 一次请求经过 SGLang 在线推理框架的流程',
  [('流程（重点在流程）', 'Client 发送 HTTP 请求 -> FastAPI 接收 -> TokenizerManager: 文本 tokenize 成 input_ids, 构造 Req 对象 '
   '-> ZMQ 发送给 Scheduler -> Scheduler.waiting_queue 排队 -> 调度器按策略取请求组 Prefill batch '
@@ -119,7 +123,11 @@ make_pdf(f'{hw1}/操作说明.pdf', 'HW1-1/2 操作记录（截图对应说明�
   ('环境', 'Ubuntu 24.04, Python 3.11.16, SGLang 0.5.14, Ray 2.56.0, torch CPU, 2 vCPU / 7.4GB RAM（无 GPU）。')])
 
 # ================= HW2 =================
-comp = json.load(open('/home/agentuser/hw2/results/comparison_table.json'))
+_hw2_results = os.path.join(_REPO, 'results', 'target1')
+_comp_path = os.path.join(_hw2_results, 'comparison_table.json')
+if not os.path.exists(_comp_path):
+    _comp_path = '/home/agentuser/hw2/results/comparison_table.json'  # legacy compat
+comp = json.load(open(_comp_path))
 d, s = comp[0], comp[1]
 t1_rows = [
     ['成功率', d['success'], s['success']],
@@ -131,9 +139,15 @@ t1_rows = [
     ['E2E p50/p95 (s)', f"{d['e2e_p50']}/{d['e2e_p95']}", f"{s['e2e_p50']}/{s['e2e_p95']}"],
     ['缓存命中率', d['hit_rate'], s['hit_rate']],
 ]
-flow_md = open('/home/agentuser/hw2/results/task2_source_flow.md').read()
+_flow_path = os.path.join(_hw2_results, 'task2_source_flow.md')
+if not os.path.exists(_flow_path):
+    _flow_path = '/home/agentuser/hw2/results/task2_source_flow.md'
+flow_md = open(_flow_path).read()
 
-make_pdf('/home/agentuser/hw2/report_out/task1_results.pdf', 'HW2 任务一：前缀缓存测量结果',
+_hw2_out = os.path.join(_REPO, '')  # repo root is output dir
+if os.path.isdir('/home/agentuser/hw2/report_out') and not os.path.isdir(_REPO):
+    _hw2_out = '/home/agentuser/hw2/report_out/'
+make_pdf(os.path.join(_hw2_out, 'task1_results.pdf'), 'HW2 任务一：前缀缓存测量结果',
  [('实验设置', 'SGLang 0.5.14 (CPU, torch_native), Qwen/Qwen3-0.6B, sampling_seed=2026, temperature=0, '
    'max_new_tokens=16, ignore_eos=true, RadixCache 开启, 原生 /generate + input_ids + 流式响应; '
    '每组 32 条, 最大并发 8, 输入 512 tokens = 256 共享前缀 + 256 独有后缀; '
@@ -149,7 +163,7 @@ make_pdf('/home/agentuser/hw2/report_out/task1_results.pdf', 'HW2 任务一：�
    '（1.074 vs 1.032s）, 仅因 batch 状态略有波动。'],
  ]))
 
-make_pdf('/home/agentuser/hw2/report_out/task2_flow.pdf', 'HW2 任务二：/generate 请求源码流程图与说明',
+make_pdf(os.path.join(_hw2_out, 'task2_flow.pdf'), 'HW2 任务二：/generate 请求源码流程图与说明',
  [('流程图（文本版）',
    'POST /generate\n  -> TokenizerManager.generate_request   [managers/tokenizer_manager.py]\n'
    '  -> tokenize -> Req -> ZMQ -> Scheduler\n'
@@ -163,7 +177,7 @@ make_pdf('/home/agentuser/hw2/report_out/task2_flow.pdf', 'HW2 任务二：/gene
    '  -> DetokenizerManager -> TokenizerManager streaming output -> Client'),
   ('说明与问答', flow_md)])
 
-make_pdf('/home/agentuser/hw2/report_out/ai_usage.pdf', 'HW2 AI 使用说明情况',
+make_pdf(os.path.join(_hw2_out, 'AI 使用说明情况（第二次挑战）.pdf'), 'HW2 AI 使用说明情况',
  [('使用的模型', 'Hermes Agent 大模型代理（GLM/Claude 级）。'),
   ('提示词', '任务书 PDF 附件 + "完成这两个项目并进行核验"、"进度如何" 等进度查询指令。'),
   ('AI 帮助', '解读任务书与 SGLang v0.5.14 源码结构定位关键函数；编写两组负载测量脚本；'

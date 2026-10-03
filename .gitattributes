@@ -10,3 +10,8 @@
 # 二进制文件不做换行转换
 *.pdf  binary
 *.png  binary
+*.zip  binary
+*.safetensors binary
+
+# JSONL 按文本处理（便于 diff）
+*.jsonl text eol=lf
