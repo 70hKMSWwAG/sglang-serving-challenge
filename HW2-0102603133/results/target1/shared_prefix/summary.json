@@ -1,0 +1,9 @@
+{
+  "group": "shared_prefix",
+  "n": 32,
+  "ok": 32,
+  "wall_s": 130.013,
+  "throughput_req_s": 0.2461,
+  "sum_input_tokens": 16384,
+  "sum_output_tokens": 512
+}

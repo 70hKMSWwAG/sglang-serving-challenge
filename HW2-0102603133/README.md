@@ -45,10 +45,12 @@ python src/gen_pdfs.py        # 重新生成报告 PDF
 ```
 
 ## 结果目录与报告表格对应关系
-- `results/run1/prefix_cache.jsonl` — 逐请求原始记录（group/idx/ttft/e2e/cached_tokens）
-- `results/run1/summary.json` — 两组汇总（成功率、吞吐）
-- `results/comparison_table.json` — 对照表（报告"任务一"表格的数据来源，含 TTFT/TPOT/E2E p50、p95、命中率、实际 Prefill tokens）
-- `results/task2_source_flow.md` — 任务二源码流程追踪文字稿
-- `report_out/task1_results.pdf` — 任务一结果与分析（含对照表）
-- `report_out/task2_flow.pdf` — 任务二流程图与说明
-- `report_out/ai_usage.pdf` — AI 使用说明情况
+- `results/target1/dispersed_prefix/per_request.jsonl` — 分散前缀组逐请求记录
+- `results/target1/dispersed_prefix/summary.json` — 分散前缀组汇总
+- `results/target1/shared_prefix/per_request.jsonl` — 共享前缀组逐请求记录
+- `results/target1/shared_prefix/summary.json` — 共享前缀组汇总
+- `results/target1/comparison_table.json` — 两组对照表（report.pdf 任务一表格的数据来源：TTFT/TPOT/E2E p50、p95、命中率、实际 Prefill tokens）
+- `results/target1/task2_source_flow.md` — 任务二源码流程追踪文字稿
+- `task1_results.pdf` / `task2_flow.pdf` — 任务一/任务二分册
+- `report.pdf` — 合订版报告（任务一 + 任务二 + AI 使用说明）
+- `AI 使用说明情况（第二次挑战）.pdf` — 按作业要求命名
