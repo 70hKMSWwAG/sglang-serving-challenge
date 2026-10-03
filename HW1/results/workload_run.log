@@ -1,0 +1,21 @@
+{"idx": 19, "input_tokens": 1787, "output_tokens": 64, "arrival_offset_s": 43.041, "status": "ok", "ttft_s": null, "latency_s": 400.903}
+{"idx": 17, "input_tokens": 893, "output_tokens": 64, "arrival_offset_s": 38.537, "status": "ok", "ttft_s": null, "latency_s": 405.4097}
+{"idx": 16, "input_tokens": 1524, "output_tokens": 64, "arrival_offset_s": 36.017, "status": "ok", "ttft_s": null, "latency_s": 407.9301}
+{"idx": 15, "input_tokens": 892, "output_tokens": 64, "arrival_offset_s": 33.946, "status": "ok", "ttft_s": null, "latency_s": 410.0001}
+{"idx": 18, "input_tokens": 892, "output_tokens": 64, "arrival_offset_s": 39.276, "status": "ok", "ttft_s": null, "latency_s": 404.6709}
+{"idx": 14, "input_tokens": 897, "output_tokens": 57, "arrival_offset_s": 33.643, "status": "ok", "ttft_s": null, "latency_s": 410.3042}
+{"idx": 13, "input_tokens": 903, "output_tokens": 64, "arrival_offset_s": 32.964, "status": "ok", "ttft_s": null, "latency_s": 410.9811}
+{"idx": 12, "input_tokens": 901, "output_tokens": 64, "arrival_offset_s": 31.42, "status": "ok", "ttft_s": null, "latency_s": 412.5273}
+{"idx": 10, "input_tokens": 898, "output_tokens": 64, "arrival_offset_s": 28.664, "status": "ok", "ttft_s": null, "latency_s": 415.2833}
+{"idx": 9, "input_tokens": 1181, "output_tokens": 64, "arrival_offset_s": 26.633, "status": "ok", "ttft_s": null, "latency_s": 417.3133}
+{"idx": 8, "input_tokens": 1288, "output_tokens": 64, "arrival_offset_s": 23.892, "status": "ok", "ttft_s": null, "latency_s": 420.0551}
+{"idx": 7, "input_tokens": 2033, "output_tokens": 64, "arrival_offset_s": 22.948, "status": "ok", "ttft_s": null, "latency_s": 420.9993}
+{"idx": 6, "input_tokens": 918, "output_tokens": 64, "arrival_offset_s": 22.066, "status": "ok", "ttft_s": null, "latency_s": 421.8819}
+{"idx": 3, "input_tokens": 1392, "output_tokens": 64, "arrival_offset_s": 6.558, "status": "ok", "ttft_s": null, "latency_s": 437.3902}
+{"idx": 2, "input_tokens": 1266, "output_tokens": 64, "arrival_offset_s": 5.803, "status": "ok", "ttft_s": null, "latency_s": 438.1448}
+{"idx": 1, "input_tokens": 892, "output_tokens": 64, "arrival_offset_s": 4.455, "status": "ok", "ttft_s": null, "latency_s": 439.4928}
+{"idx": 5, "input_tokens": 905, "output_tokens": 64, "arrival_offset_s": 8.424, "status": "ok", "ttft_s": null, "latency_s": 435.5238}
+{"idx": 11, "input_tokens": 892, "output_tokens": 29, "arrival_offset_s": 31.232, "status": "ok", "ttft_s": null, "latency_s": 412.7161}
+{"idx": 4, "input_tokens": 1778, "output_tokens": 8, "arrival_offset_s": 7.57, "status": "ok", "ttft_s": null, "latency_s": 436.3784}
+{"idx": 0, "input_tokens": 1666, "output_tokens": 64, "arrival_offset_s": 0.023, "status": "ok", "ttft_s": null, "latency_s": 443.9252}
+DONE
