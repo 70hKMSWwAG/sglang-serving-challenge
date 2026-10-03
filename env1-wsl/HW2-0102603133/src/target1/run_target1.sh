@@ -15,7 +15,7 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HW2="$(cd "$HERE/../.." && pwd)"          # .../HW2-林彦超
+HW2="$(cd "$HERE/../.." && pwd)"          # .../HW2-0102603133
 ENVD="$HERE/../env"
 WORK="${WORK:-/mnt/d/first-task}"
 

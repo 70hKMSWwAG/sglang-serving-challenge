@@ -20,7 +20,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 HW2 = os.path.abspath(os.path.join(HERE, "..", ".."))
 RESDIR = os.path.join(HW2, "results", "target1")
-NAME = "林彦超"
+NAME = "0102603133"
 
 
 def esc(s):
@@ -351,7 +351,7 @@ def build_html(runs):
 <div class="meta">
 <span><b>模型</b>　Qwen/Qwen3-0.6B　　<b>SGLang</b>　0.5.14　　<b>Ray</b>　2.56.0</span><br>
 <span><b>平台</b>　WSL2 Ubuntu 26.04　Intel Core Ultra 5 338H（12 vCPU，纯 CPU 推理）</span><br>
-<span><b>姓名</b>　{esc(NAME)}</span>
+<span><b>学号</b>　{esc(NAME)}</span>
 </div>
 </div>
 ''')

@@ -8,7 +8,7 @@
 # 可用环境变量 CHROME 指定浏览器路径。
 #
 # 用法：
-#     bash src/report_src/build_pdfs.sh          # 在 HW2-林彦超 根目录下执行
+#     bash src/report_src/build_pdfs.sh          # 在 HW2-0102603133 根目录下执行
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -35,7 +35,7 @@
 
 ```bash
 # 在 WSL 内（建议 root，避免 apt 交互式密码提示）
-cd /mnt/d/<你的路径>/HW2-林彦超
+cd /mnt/d/<你的路径>/HW2-0102603133
 sudo bash src/env/01_setup_env.sh
 ```
 
