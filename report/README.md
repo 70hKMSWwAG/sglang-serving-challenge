@@ -4,7 +4,7 @@
 
 | 文件 | 对应 PDF |
 |---|---|
-| `src/操作保存.html` | `HW1/deliverables/操作说明.pdf`（截图1/2 + 附录，引用 `evidence/shot*.png`） |
+| `src/操作保存.html` | `HW1/deliverables/操作保存.pdf`（截图1/2 + 附录，内嵌 `evidence/shot*.png` 真机截图；PDF 由 `HW1/src/make_shots_pdf.py` 生成） |
 | `src/流程图.html` | `HW1/deliverables/流程图.pdf` |
 | `src/重点回答.html` | `HW1/deliverables/重点回答.pdf` |
 | `src/作业感受.html` | `HW1/deliverables/作业感受.pdf` |

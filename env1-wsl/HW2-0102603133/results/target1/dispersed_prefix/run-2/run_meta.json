@@ -1,0 +1,22 @@
+{
+  "started_at": "2026-09-29T11:21:52+0800",
+  "base_url": "http://127.0.0.1:30000",
+  "model_dir": "/opt/sgl-workspace/models/Qwen3-0.6B",
+  "sampling_params": {
+    "temperature": 0,
+    "max_new_tokens": 16,
+    "ignore_eos": true,
+    "sampling_seed": 2026
+  },
+  "n_per_group": 32,
+  "concurrency": 8,
+  "prefix_tokens": 2048,
+  "suffix_tokens": 64,
+  "order": [
+    "dispersed",
+    "shared"
+  ],
+  "tag": "run-2",
+  "corpus_tokens": 6535,
+  "workload_design": "shared   = SHARED[0:2048] + SUFFIX[i]; dispersed= [u_i] + SHARED[1:2048] + SUFFIX[i]; u_i 两两互异且 != SHARED[0]"
+}

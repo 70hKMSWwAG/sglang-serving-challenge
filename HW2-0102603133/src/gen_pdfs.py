@@ -131,16 +131,7 @@ def gen_hw1():
       ('（3）对科研的启发', '从 0 到 1 的科研需要：① 可行性评估（诚实面对资源约束并寻找替代路径）；'
        '② 复现能力（版本锁定、环境记录）；③ 用数据说话（对照实验、量化指标）；④ 迭代式推进（先跑通再优化）。')])
 
-    make_pdf(f'{hw1}/操作说明.pdf', 'HW1-1/2 操作记录（截图对应说明）',
-     [('服务启动', 'sglang.launch_server --model-path Qwen/Qwen3-0.6B --device cpu '
-       '--attention-backend torch_native --mem-fraction-static 0.8 --watchdog-timeout 100000 '
-       '--max-running-requests 8 --port 30000'),
-      ('/v1/models 访问', 'curl http://127.0.0.1:30000/v1/models -> 返回 Qwen/Qwen3-0.6B（结果存 results/models.json，即截图1内容）'),
-      ('推理请求', 'POST /v1/chat/completions，成功生成回答（results/inference_response.json，截图1）'),
-      ('Workload 实验', 'python src/run_workload.py：从 22441 条 Mooncake arxiv trace 采样 20 条，'
-       '按 input_length 构造 synthetic prompt，Poisson(lambda=0.5/s) 到达，流式发送 /generate。'
-       '20/20 成功，逐请求 input/output tokens、status、latency 记录于 results/workload_results.jsonl（截图2）。'),
-      ('环境', 'Ubuntu 24.04, Python 3.11.16, SGLang 0.5.14, Ray 2.56.0, torch CPU, 2 vCPU / 7.4GB RAM（无 GPU）。')])
+    # 操作保存.pdf（真机截图版）由 HW1/src/make_shots_pdf.py 生成，此处不再产出文字版
 
 def gen_hw2():
     _hw2_results = os.path.join(_REPO, 'results', 'target1')

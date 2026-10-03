@@ -1,0 +1,50 @@
+{
+  "group": "dispersed_prefix",
+  "n_requested": 32,
+  "n_success": 32,
+  "success_rate": 1.0,
+  "wall_clock_s": 306.3276961229999,
+  "request_throughput_rps": 0.10446329341095892,
+  "output_throughput_tok_s": 1.6714126945753427,
+  "total_prompt_tokens": 67584,
+  "total_cached_tokens": 0,
+  "total_completion_tokens": 512,
+  "cache_hit_rate": 0.0,
+  "actual_prefill_tokens": 67584,
+  "prefill_token_ratio": 1.0,
+  "ttft_ms": {
+    "p50": 39745.14985600001,
+    "p95": 61255.84199115009,
+    "avg": 39223.460780687514,
+    "min": 13720.589582999992,
+    "max": 61539.33719300017
+  },
+  "tpot_ms": {
+    "p50": 2496.510704833334,
+    "p95": 4143.8633444433435,
+    "avg": 2490.4282999645843,
+    "min": 905.7182802000019,
+    "max": 4391.83743053333
+  },
+  "e2e_ms": {
+    "p50": 76005.29468500009,
+    "p95": 79598.48294970006,
+    "avg": 76579.88528015628,
+    "min": 74707.34220000009,
+    "max": 79599.30307700006
+  },
+  "warmup_request": null,
+  "flush_cache": {
+    "status": 200,
+    "body": "Cache flushed.\nPlease check backend logs for more details. (When there are running or waiting requests, the operation will not be performed.)",
+    "success": true
+  },
+  "input_tokens_local": 2112,
+  "concurrency": 8,
+  "sampling_params": {
+    "temperature": 0,
+    "max_new_tokens": 16,
+    "ignore_eos": true,
+    "sampling_seed": 2026
+  }
+}

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>第二次挑战实验报告 — 林彦超</title>
+<style>
+@page { size: A4; margin: 16mm 15mm 14mm 15mm; }
+@page chartpage { size: A4; margin: 11mm 9mm 9mm 9mm; }
+* { box-sizing: border-box; }
+body { font-family: "Noto Sans CJK SC","Source Han Sans SC","Microsoft YaHei",sans-serif;
+       color:#1b2733; font-size:10.6pt; line-height:1.62; margin:0; }
+h1 { font-size:19pt; margin:0 0 4px; letter-spacing:.5px; }
+h2 { font-size:13.2pt; margin:16px 0 7px; padding:5px 0 5px 10px; border-left:4px solid #2b5c8a;
+     background:#f2f7fc; color:#16324f; }
+h3 { font-size:11.4pt; margin:12px 0 5px; color:#1d4b73; }
+h4 { font-size:10.6pt; margin:10px 0 4px; color:#2b3a4a; }
+p  { margin:5px 0; text-align:justify; }
+ul,ol { margin:5px 0 5px 20px; padding:0; }
+li { margin:2.5px 0; }
+table { border-collapse:collapse; width:100%; margin:8px 0 4px; font-size:9.6pt; }
+th,td { border:1px solid #cfdbe6; padding:4.5px 7px; text-align:left; vertical-align:top; }
+th { background:#eef4fa; color:#16324f; font-weight:600; }
+td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; }
+tr.hl td { background:#fff9e8; font-weight:600; }
+.mono { font-family:Consolas,"DejaVu Sans Mono",monospace; font-size:9.2pt; }
+.small { font-size:9.2pt; color:#54626f; }
+.note { background:#f7fafd; border:1px solid #dbe6f0; border-radius:5px; padding:7px 10px; margin:8px 0; }
+.warn { background:#fff9e8; border:1px solid #e8cd8a; border-radius:5px; padding:7px 10px; margin:8px 0; }
+.blank { background:#fbfbfb; border:1px dashed #b9c6d3; border-radius:5px; padding:8px 10px;
+         margin:6px 0; color:#7a8794; font-size:9.6pt; min-height:56px; }
+.page { page-break-after: always; }
+.page:last-child { page-break-after: auto; }
+.page.tight { font-size:10.0pt; line-height:1.5; }
+.page.tight h2 { margin:0 0 6px; }
+.page.tight h3 { margin:9px 0 4px; }
+.page.tight p { margin:4px 0; }
+.page.tight table { font-size:9.2pt; }
+.page.tight ul, .page.tight ol { margin:4px 0 4px 18px; }
+.page.tight li { margin:1.6px 0; }
+.page.chartpage { page: chartpage; }
+.page.chartpage h2 { margin:0 0 2px; font-size:12pt; padding:3px 0 3px 9px; }
+.page.chartpage svg { display:block; width:100%; height:268mm; }
+.covertop { text-align:center; padding:16mm 0 4mm; }
+.covertop h1 { border:none; }
+.covertop .sub { color:#54626f; font-size:11pt; margin-top:8px; }
+.covertop .line { width:96px; height:3px; background:#2b5c8a; margin:14px auto 16px; }
+.covertop .meta { margin-top:14px; font-size:10.4pt; color:#37474f; line-height:1.9; }
+.kv { display:grid; grid-template-columns: 108px 1fr; gap:2px 10px; font-size:10pt; }
+.kv b { color:#37474f; font-weight:600; }
+.formula { text-align:center; margin:10px 0; font-size:11pt; }
+.frac { display:inline-block; vertical-align:middle; text-align:center; margin:0 3px; }
+.frac .num { display:block; padding:0 4px; border-bottom:1.2px solid #33455a; }
+.frac .den { display:block; padding:0 4px; }
+.sig { margin-top:14px; text-align:right; color:#37474f; font-size:10.2pt; }
+.legend { font-size:9.4pt; color:#54626f; margin:2px 0 8px; }
+</style></head>
+<body>
+<div class="page">
+<div class="covertop">
+<h1>SGLang 前缀缓存测量 与 /generate 请求流程分析</h1>
+<div class="line"></div>
+<div class="sub">第二次挑战 · 实验报告</div>
+<div class="meta">
+<span><b>模型</b>　Qwen/Qwen3-0.6B　　<b>SGLang</b>　0.5.14　　<b>Ray</b>　2.56.0</span><br>
+<span><b>平台</b>　WSL2 Ubuntu 26.04　Intel Core Ultra 5 338H（12 vCPU，纯 CPU 推理）</span><br>
+<span><b>姓名</b>　林彦超</span>
+</div>
+</div>
+
+<h2>一、摘要</h2>
+<p>本次挑战在第一次挑战已部署好的 SGLang 0.5.14 在线服务上，测量了 <b>Radix Cache 前缀复用</b>
+的实际效果。两组负载各 32 条请求、最大并发 8，输入长度同为 2112 token，采样参数完全一致，
+唯一差别是前缀能否被复用。结果显示：共享前缀组把 <b>97.01%</b> 的 prompt token 变成缓存命中，
+实际执行 Prefill 的 token 数由 67,584 降至
+2,019（降幅 97.0%），
+TTFT 的 p50 由 37,520.4 ms 降至 17,338.0 ms，
+端到端 p50 由 66,321.2 ms 降至 29,950.0 ms，
+输出吞吐由 1.92 提升到 4.31 tok/s。
+TPOT 表面上也从 1,976.36 ms 降到 864.03 ms，
+但那是「同批同步」下与 TTFT 此消彼长的结果，<b>不能</b>读作 Decode 变快（见 6.1）。
+两组成功率均为 32/32。</p>
+<p>这与因果自注意力下「K/V 只由该位置及其之前的 token 决定」的性质一致：前缀缓存削减的是
+<b>Prefill 的计算量</b>，而不改变 Decode 每步需要读取的上下文长度（上下文长 N 与步数两组完全一致）。
+把两组多出的 Prefill token 按服务端实测的 Prefill 吞吐折算，恰好能解释端到端时长的全部差异（见 6.2）。
+任务二沿指定主线逐跳核对了 v0.5.14 源码，给出了覆盖「请求接收 → 等待队列 → 前缀匹配 → Prefill/Decode
+→ 缓存写回 → 流式输出」的流程图与说明。</p>
+<h2>二、实验环境与软件版本</h2>
+<table>
+<tr><th style="width:22%">项</th><th>值</th></tr>
+<tr><td>宿主 / 发行版</td><td>Windows + WSL2 · Ubuntu 26.04 LTS (Resolute Racoon)</td></tr>
+<tr><td>CPU</td><td>Intel Core Ultra 5 338H（代号 Panther Lake），12 vCPU；<b>无 AVX-512、无 AMX</b></td></tr>
+<tr><td>GPU / NPU</td><td>Intel Arc B370 核显 + NPU。<b>未参与计算</b>：WSL 内无 <span class="mono">i915</span>/<span class="mono">xe</span>
+ DRM 驱动，缺 Intel 计算运行时（Level-Zero / OpenCL / SYCL），<span class="mono">/dev/dri</span> 仅由内核 <span class="mono">vgem</span> 虚拟桩提供</td></tr>
+<tr><td>Python</td><td>3.12.14（standalone，与发行版自带 3.14 解耦）</td></tr>
+<tr><td><b>SGLang</b></td><td><b>0.5.14</b>（源码构建，<span class="mono">--device cpu</span>）</td></tr>
+<tr><td><b>Ray</b></td><td><b>2.56.0</b>（独立 venv，与 SGLang 通过 HTTP 通信）</td></tr>
+<tr><td><b>模型</b></td><td><b>Qwen/Qwen3-0.6B</b>（bfloat16）</td></tr>
+<tr><td>Radix Cache</td><td><b>开启</b>（未传 <span class="mono">--disable-radix-cache</span>；服务端日志有 <span class="mono">Tree cache initialized … RadixCache</span>）</td></tr>
+</table>
+<h4>服务端自报的缓存与批调度配置（摘自服务端启动日志，完整日志见 version_info.log）</h4>
+<table><tr><td>disable_radix_cache</td><td class='mono'>False（False = 启用 Radix Cache）</td></tr><tr><td>radix_cache_backend</td><td class='mono'>None</td></tr><tr><td>radix_eviction_policy</td><td class='mono'>lru</td></tr><tr><td>page_size（命中粒度对齐）</td><td class='mono'>1</td></tr><tr><td>chunked_prefill_size</td><td class='mono'>2048</td></tr><tr><td>max_prefill_tokens</td><td class='mono'>16384</td></tr><tr><td>schedule_policy</td><td class='mono'>fcfs</td></tr><tr><td>attention_backend</td><td class='mono'>torch_native</td></tr><tr><td>disable_chunked_prefix_cache</td><td class='mono'>False</td></tr><tr><td>device</td><td class='mono'>cpu</td></tr><tr><td>dtype</td><td class='mono'>auto</td></tr><tr><td>tp_size</td><td class='mono'>1</td></tr><tr><td>KV 实际分配</td><td class='mono'>[2026-09-29 10:56:39] KV Cache is allocated. dtype: torch.bfloat16, #tokens: 82206, K size: 4.39 GB, V size: 4.39 GB</td></tr><tr><td>运行上限（服务端自报）</td><td class='mono'>[2026-09-29 10:56:39] max_total_num_tokens=82206, chunked_prefill_size=2048, max_prefill_tokens=16384, max_running_requests=2048, context_len=40960, available_cpu_mem=2.24 GB</td></tr><tr><td>基数树初始化</td><td class='mono'>[2026-09-29 10:56:39] Tree cache initialized: source=default impl=RadixCache hybrid_swa=False hybrid_ssm=False hierarchical=False streaming_wrapped=False</td></tr></table>
+</div>
+<div class="page tight">
+<h2>三、任务一：测量前缀缓存</h2>
+<h3>3.1 两组负载的结构</h3>
+<table>
+<tr><th style="width:14%">负载</th><th style="width:44%">输入结构</th><th>测量前准备</th></tr>
+<tr><td><b>共享前缀</b></td><td>2048 个 token 的共享前缀 + 64 个 token 的独立后缀（合计 <b>2112</b>）</td><td>发送 1 条包含共享前缀的预热请求（不计入结果）</td></tr>
+<tr><td><b>分散前缀</b></td><td>输入长度均为 <b>2112</b> 个 token，且首个 token 各不相同</td><td>不进行前缀预热</td></tr>
+</table>
+<h3>3.2 控制变量：如何做到「除前缀能否复用外，其余一致」</h3>
+<p>若两组各照字面自造一份语料，内容差异会与「前缀可否复用」混在一起。为把自变量隔离出来，
+分散前缀组按下面的方式构造（记号：<span class="mono">SHARED = base[0:2048]</span>，
+<span class="mono">SUFFIX[i] = base[2048+64i : 2112+64i]</span>，<span class="mono">u_i</span> 为 32 个两两互异的合法 token id）：</p>
+<div class="formula mono" style="text-align:left;margin-left:14px">
+共享组第 i 条 = SHARED[0:2048] + SUFFIX[i]<br>
+分散组第 i 条 = [u<sub>i</sub>] + SHARED[1:2048] + SUFFIX[i]
+</div>
+<p>于是两组：输入长度同为 2112；独立后缀逐 token 相同；承载共享前缀的 2048 个 token 中有
+<b>2047 个完全相同</b>；唯一差别是位置 0 的 token 两两不同。而 RadixCache 是从根节点按 token 逐位匹配的，
+位置 0 一旦不同，两条序列在树中就没有公共可达节点，前缀复用率为 0 —— 自变量因此被隔离为单一变量。
+构造逻辑与断言见 <span class="mono">src/target1/prefix_cache_bench.py</span> 的 <span class="mono">build_workloads()</span>。</p>
+<h3>3.3 测量流程</h3>
+<ol>
+<li>服务预热：首次实验前先发一条 <b>短请求</b>（16 token）完成预热，结果丢弃。</li>
+<li>每组测量前：等待已有请求全部结束 → <span class="mono">POST /flush_cache</span> 并确认返回
+ <span class="mono">Cache flushed.</span>（HTTP 200）。</li>
+<li>共享前缀组在 flush 之后再发 <b>1 条包含共享前缀的预热请求</b>（2048+64），结果丢弃；
+ 分散前缀组不做任何预热。</li>
+<li>按序号顺序提交 32 条测量请求，<b>最大并发 8</b>，全部使用原生
+ <span class="mono">/generate</span> + <span class="mono">input_ids</span> + <span class="mono">stream=true</span>。</li>
+<li>逐请求从服务端返回的 <span class="mono">meta_info</span> 读取 <span class="mono">prompt_tokens</span> 与
+ <span class="mono">cached_tokens</span>；TTFT 取「首个携带生成 token 的分片到达」的时刻，
+ TPOT = (端到端 − TTFT) / (生成 token 数 − 1)。</li>
+</ol>
+<div class="note"><b>指标定义（与任务书一致）</b><br>
+缓存命中率 = Σ<span class="mono">cached_tokens</span> / Σ<span class="mono">prompt_tokens</span>；
+实际 Prefill token 数 = Σ(<span class="mono">prompt_tokens</span> − <span class="mono">cached_tokens</span>)。<br>
+分位数 p50 / p95 采用线性插值（与 numpy 默认方法一致）。吞吐量 = Σ<span class="mono">completion_tokens</span> / 本组墙钟时间。</div>
+</div>
+<div class="page">
+<h2>四、任务一：测量结果（run-1）</h2>
+<h3>4.1 主对照表</h3>
+<table>
+<tr>
+  <th style="width:30%">指标</th>
+  <th class="n" style="width:24%">共享前缀<br>shared_prefix</th>
+  <th class="n" style="width:24%">分散前缀<br>dispersed_prefix</th>
+  <th>说明</th>
+</tr>
+<tr><td>成功率</td><td class="n">32/32（100.0%）</td>
+    <td class="n">32/32（100.0%）</td>
+    <td>两组测量请求均全部成功</td></tr>
+<tr><td>吞吐量（输出 tok/s）</td><td class="n">4.31</td>
+    <td class="n">1.92</td><td>Σ completion_tokens / 墙钟</td></tr>
+<tr><td>吞吐量（请求 req/s）</td><td class="n">0.269</td>
+    <td class="n">0.120</td><td>32 / 墙钟</td></tr>
+<tr class="hl"><td>缓存命中率</td><td class="n">97.01%</td>
+    <td class="n">0.00%</td><td>Σcached / Σprompt，取自服务端 meta_info</td></tr>
+<tr class="hl"><td>实际 Prefill token 数</td><td class="n">2,019</td>
+    <td class="n">67,584</td>
+    <td>Σ(prompt − cached)；总 prompt 各 67,584 / 67,584</td></tr>
+<tr><td>TTFT p50（ms）</td><td class="n">17,338.0</td>
+    <td class="n">37,520.4</td><td>首 token 到达时间</td></tr>
+<tr><td>TTFT p95（ms）</td><td class="n">17,949.4</td>
+    <td class="n">56,424.9</td><td rowspan="2">p95 反映高并发下的长尾</td></tr>
+<tr><td>TPOT p50（ms）</td><td class="n">864.03</td>
+    <td class="n">1,976.36</td></tr>
+<tr><td>TPOT p95（ms）</td><td class="n">1,832.94</td>
+    <td class="n">3,595.13</td><td>输出 token 间平均间隔</td></tr>
+<tr><td>端到端 p50（ms）</td><td class="n">29,950.0</td>
+    <td class="n">66,321.2</td><td rowspan="2">整条请求耗时</td></tr>
+<tr><td>端到端 p95（ms）</td><td class="n">30,618.5</td>
+    <td class="n">69,381.4</td></tr>
+<tr><td>墙钟时间（s）</td><td class="n">118.9</td>
+    <td class="n">266.2</td><td>并发 8 下 32 条请求的总耗时</td></tr>
+</table>
+<p class="legend">数据源：<span class="mono">results/target1/{shared_prefix,dispersed_prefix}/run-1/summary.json</span>；
+逐请求明细见同目录 <span class="mono">requests.jsonl</span>。</p>
+<svg viewBox="0 0 680 250" width="100%" font-family="Noto Sans CJK SC, Microsoft YaHei, sans-serif">
+<line x1="62" y1="204.0" x2="668" y2="204.0" stroke="#e3eaf2" stroke-width="1"/>
+<text x="56" y="207.5" text-anchor="end" font-size="9.5" fill="#7b8794">0.0</text>
+<line x1="62" y1="157.5" x2="668" y2="157.5" stroke="#e3eaf2" stroke-width="1"/>
+<text x="56" y="161.0" text-anchor="end" font-size="9.5" fill="#7b8794">24.3</text>
+<line x1="62" y1="111.0" x2="668" y2="111.0" stroke="#e3eaf2" stroke-width="1"/>
+<text x="56" y="114.5" text-anchor="end" font-size="9.5" fill="#7b8794">48.5</text>
+<line x1="62" y1="64.5" x2="668" y2="64.5" stroke="#e3eaf2" stroke-width="1"/>
+<text x="56" y="68.0" text-anchor="end" font-size="9.5" fill="#7b8794">72.8</text>
+<line x1="62" y1="18.0" x2="668" y2="18.0" stroke="#e3eaf2" stroke-width="1"/>
+<text x="56" y="21.5" text-anchor="end" font-size="9.5" fill="#7b8794">97.0</text>
+<rect x="96.8" y="18.0" width="23.5" height="186.0" rx="2" fill="#2b5c8a"/>
+<text x="108.6" y="14.5" text-anchor="middle" font-size="9.2" fill="#33455a">97.0</text>
+<rect x="124.8" y="204.0" width="23.5" height="0.8" rx="2" fill="#c8901a"/>
+<text x="136.6" y="200.5" text-anchor="middle" font-size="9.2" fill="#33455a">0.0</text>
+<text x="122.6" y="219.0" text-anchor="middle" font-size="10.2" fill="#2b3a4a">缓存命中率 (%)</text>
+<rect x="218.0" y="200.1" width="23.5" height="3.9" rx="2" fill="#2b5c8a"/>
+<text x="229.8" y="196.6" text-anchor="middle" font-size="9.2" fill="#33455a">2.0</text>
+<rect x="246.0" y="74.4" width="23.5" height="129.6" rx="2" fill="#c8901a"/>
+<text x="257.8" y="70.9" text-anchor="middle" font-size="9.2" fill="#33455a">67.6</text>
+<text x="243.8" y="219.0" text-anchor="middle" font-size="10.2" fill="#2b3a4a">实际 Prefill (k tokens)</text>
+<rect x="339.2" y="170.8" width="23.5" height="33.2" rx="2" fill="#2b5c8a"/>
+<text x="351.0" y="167.3" text-anchor="middle" font-size="9.2" fill="#33455a">17.3</text>
+<rect x="367.2" y="132.1" width="23.5" height="71.9" rx="2" fill="#c8901a"/>
+<text x="379.0" y="128.6" text-anchor="middle" font-size="9.2" fill="#33455a">37.5</text>
+<text x="365.0" y="219.0" text-anchor="middle" font-size="10.2" fill="#2b3a4a">TTFT p50 (s)</text>
+<rect x="460.4" y="202.3" width="23.5" height="1.7" rx="2" fill="#2b5c8a"/>
+<text x="472.2" y="198.8" text-anchor="middle" font-size="9.2" fill="#33455a">0.9</text>
+<rect x="488.4" y="200.2" width="23.5" height="3.8" rx="2" fill="#c8901a"/>
+<text x="500.2" y="196.7" text-anchor="middle" font-size="9.2" fill="#33455a">2.0</text>
+<text x="486.2" y="219.0" text-anchor="middle" font-size="10.2" fill="#2b3a4a">TPOT p50 (s)</text>
+<rect x="581.6" y="146.6" width="23.5" height="57.4" rx="2" fill="#2b5c8a"/>
+<text x="593.4" y="143.1" text-anchor="middle" font-size="9.2" fill="#33455a">30.0</text>
+<rect x="609.6" y="76.8" width="23.5" height="127.2" rx="2" fill="#c8901a"/>
+<text x="621.4" y="73.3" text-anchor="middle" font-size="9.2" fill="#33455a">66.3</text>
+<text x="607.4" y="219.0" text-anchor="middle" font-size="10.2" fill="#2b3a4a">端到端 p50 (s)</text>
+<rect x="62" y="232" width="10" height="10" rx="2" fill="#2b5c8a"/>
+<text x="76" y="241" font-size="10.2" fill="#2b3a4a">共享前缀 shared_prefix</text>
+<rect x="282" y="232" width="10" height="10" rx="2" fill="#c8901a"/>
+<text x="296" y="241" font-size="10.2" fill="#2b3a4a">分散前缀 dispersed_prefix</text>
+</svg>
+<p class="legend">图 1　两组关键指标对照（不同量纲，按各自数值绘制，用于观察差异方向与量级）。</p>
+<h3>4.2 服务端侧的独立旁证</h3>
+<table>
+<tr><th>组</th><th class="n">服务端 Prefill 批次总数</th><th class="n">其中 #cached-token &gt; 0</th>
+<th class="n">本组服务端累计 #new-token</th><th class="n">本组服务端累计 #cached-token</th></tr>
+<tr><td>共享前缀</td><td class="n">8</td><td class="n">8</td>
+<td class="n">2,019</td><td class="n">65,565</td></tr>
+<tr><td>分散前缀</td><td class="n">36</td><td class="n">0</td>
+<td class="n">67,584</td><td class="n">0</td></tr>
+</table>
+<p class="small">上表由 <span class="mono">server_log_slice.log</span> 中的 <span class="mono">Prefill batch, #new-token: …, #cached-token: …</span> 行直接汇总，与服务端自报数据独立于客户端统计，可与主表互相印证。</p>
+</div>
+<div class="page tight">
+<h2>五、任务一：从因果自注意力公式解释前缀复用</h2>
+<p>单头缩放的因果自注意力为</p>
+<div class="formula">
+Attention(Q, K, V) = softmax<span class="frac"><span class="num">Q K<sup>T</sup></span><span class="den">√d<sub>k</sub></span></span> V
+</div>
+<p>其中 <span class="mono">Q = XW<sub>Q</sub>, K = XW<sub>K</sub>, V = XW<sub>V</sub></span>，
+<span class="mono">X</span> 是长度 N 的输入隐状态序列。加入因果掩码 <span class="mono">M</span> 后</p>
+<div class="formula">
+Attention = softmax<span class="frac"><span class="num">Q K<sup>T</sup></span><span class="den">√d<sub>k</sub></span></span> + M &nbsp;V，
+&nbsp;&nbsp; M<sub>ij</sub> = 0&nbsp;(j ≤ i)，&nbsp; M<sub>ij</sub> = −∞&nbsp;(j &gt; i)
+</div>
+<p>掩码的作用是让位置 <span class="mono">t</span> 的输出只能注意到 <span class="mono">j ≤ t</span> 的键值，
+即注意力权重的幅值在 <span class="mono">j &gt; t</span> 处被置零。</p>
+
+<h3>5.1 为什么相同 token 与位置的前缀可以复用 K/V</h3>
+<p>关键是 <b>K<sub>i</sub> 与 V<sub>i</sub> 只由位置 i 的隐状态决定</b>：</p>
+<div class="formula">K<sub>i</sub> = h<sub>i</sub> W<sub>K</sub>，&nbsp;&nbsp; V<sub>i</sub> = h<sub>i</sub> W<sub>V</sub></div>
+<p>而 <span class="mono">h<sub>i</sub></span> 又逐层只由前 <span class="mono">i</span> 个 token 的表示算出。
+因果掩码只限制「能看多远」，<b>不会改变已经算出来的某个位置的 K/V 数值</b>——它作用在
+<span class="mono">QK<sup>T</sup></span> 上，而不是作用在 K、V 本身。因此，若两个请求的 token 序列在
+位置 <span class="mono">0 … L−1</span> 上逐位相同（token 相同、位置相同，且模型权重与 dtype 相同），
+那么这 L 个位置在每一层的 K/V <b>在数值上完全一致</b>，缓存它们就是安全的：</p>
+<ul>
+<li>把先前请求在这 L 个位置已经算好、并已按 paged 布局写进 KV Cache 的
+<span class="mono">token → slot</span> 索引保留在 RadixCache 里；</li>
+<li>新请求到达时，沿基数树逐 token 匹配得到前 L 个 token 的 slot 列表，写入
+<span class="mono">req.prefix_indices</span>，并在组批时令
+<span class="mono">extend_input_len = N − L</span>；</li>
+<li>于是本轮 Prefill 只需对位置 <span class="mono">L … N−1</span> 计算并写出 K/V。</li>
+</ul>
+<p>本实验的对应关系：共享前缀组的 <span class="mono">L ≈ 2048</span>（36 条请求共享的前缀），
+分散前缀组因位置 0 各不相同，匹配在根节点即失败，<span class="mono">L = 0</span>。</p>
+
+<h3>5.2 命中之后仍需计算哪些 token</h3>
+<ol>
+<li><b>未命中后缀的全部 token</b>（位置 L … N−1）：它们的 Q、K、V 都必须新算并写出，
+本实验中即每条请求自己的 64 个后缀 token，外加 2048 前缀中未被缓存覆盖的部分；</li>
+<li><b>Decode 阶段每一个新生成的 token</b>：每个新 token 都要在前一步基础上重新算 Q/K/V 并追加进缓存，
+共 <span class="mono">max_new_tokens = 16</span> 步；</li>
+<li>此外，已命中前缀虽然不必重算，但新算出的 Q（位置 ≥ L）在注意力里<b>仍要读取</b>那 L 个位置的 K/V
+（<span class="mono">forward_extend</span> 中做 KV 拼接）。所以复用省掉的是
+<b>「算 K/V 并把它们写进缓存」的算力</b>，而不是省掉对它们的读取。</li>
+</ol>
+<p class="small">补充：匹配长度会先按 <span class="mono">page_size</span> 对齐
+（<span class="mono">RadixKey.page_aligned</span>）；本实验 <span class="mono">page_size = 1</span>，
+因此命中粒度为单 token。</p>
+</div>
+<div class="page tight">
+<h2>六、任务一：数据与公式的相互印证</h2>
+<h3>6.1 TTFT 与 TPOT 为什么同时下降——以及不能据此下的结论</h3>
+<p>先给结论：本次测量能够确证的是 <b>Prefill 量的大幅下降</b>与<b>端到端时长的下降</b>；
+TPOT 的下降<b>不能</b>读作「Decode 本身变快了」。</p>
+<p>原因在于同一轮的 8 条请求在服务端是<b>同批同步</b>推进的，端到端耗时几乎相等（见 6.3 的极差统计）。
+于是 TTFT 与 TPOT 并非两个彼此独立的观测量，而是<b>同一段固定时长在「等待」与「解码窗口」之间的分配</b>：
+一条请求被准入得越早，它的 TTFT 越小、留给解码的窗口越长，摊到每个输出 token 上的 TPOT 就越大。</p>
+<p class="small">同轮「时长守恒」的两个实例（均取 run-1 第一轮 8 条中最先 / 最后被准入的两条）：共享前缀组 <span class="mono">2,039 + 15×1,905 ≈ 17,658 + 15×864 ≈ 30,619 ms</span>；分散前缀组 <span class="mono">12,030 + 15×3,479 ≈ 54,606 + 15×641 ≈ 64,218 ms</span>。</p>
+<p>从计算量看，Decode 单步与前缀是否命中<b>无关</b>：每步仍然是 1 个新 query 对 N 个位置的 K/V，
+上下文总长 N 与步数（<span class="mono">max_new_tokens = 16</span>）两组完全一致。
+前缀缓存改变的是「同一批内还需要做多少 Prefill」，而 Decode 会与这些 Prefill 争抢同一批 CPU。
+因此跨组比较应以<b>端到端时长与吞吐</b>为准，TTFT / TPOT 只作过程量参考。</p>
+
+<h3>6.2 端到端差异的定量归因</h3>
+<p>把每轮 8 条请求看作一个整体：共享前缀组每轮需 Prefill <span class="mono">8 × 64 = 512</span> 个 token，
+分散前缀组需 <span class="mono">8 × 2112 = 16,896</span> 个，<b>相差 16,384 个/轮</b>，
+四轮合计 <span class="mono">65,536</span> 个；而两组每轮的 Decode 步数完全相同
+（<span class="mono">8 × 16</span>）、上下文总长也相同。实测两组墙钟之差为
+<b>147.4 s</b>（266.2 s − 118.9 s）。</p>
+<p>服务端日志里分散组 Prefill 批次自报的吞吐中位数为 <b>300 tok/s</b>。
+若把多出的 65,536 个 token 按这个吞吐串行折算，需要约
+218 s；实测只需要 147.4 s，<b>明显更少</b>。
+这是因为 Prefill 与 Decode 在同一批内是重叠推进的，并非严格串行。
+结论：<b>端到端差异的量级由多出的 Prefill 量决定</b>（隐含吞吐 445 tok/s，
+与服务端自报的 300 tok/s 同一量级），
+不需要假设 Decode 变快或变慢。</p>
+<p class="small">逐项核对：公式预测命中 <span class="mono">L = 2048</span>、每条需 Prefill
+<span class="mono">N − L = 64</span>，32 条合计 2,048 个 token，实测
+2,019 个——略低于预测，是因为少数请求的独立后缀与共享前缀的后续 token
+恰好相同，命中长度顺延到了 2049…2054（见 <span class="mono">requests.jsonl</span> 的
+<span class="mono">cached_tokens</span>）。分散前缀组实测 cached tokens 为
+0、实际 Prefill 67,584 个，
+与「L = 0」的预测完全一致。</p>
+<h3>6.3 并发 8 下的「准入等待」：一个必须说明的实测现象</h3>
+<p>主表中共享前缀组的 TTFT 达 17,338.0 ms，远高于
+「已命中 2048 个 token、只剩 65 个 token 需要 prefill」应有的量级。这并不意味着 Prefill 变慢了——
+服务端日志中本组的前两条 Prefill 记录就是直接证据：</p>
+<pre class="mono small">[2026-09-29 11:15:16] Prefill batch, #new-seq: 1, #new-token: 64, #cached-token: 2048, token usage: 0.03, #running-req: 0, #queue-req: 0, #pending-token: 0, cpu graph: False, input throughput (token/s): 13.00
+[2026-09-29 11:15:31] Prefill batch, #new-seq: 7, #new-token: 448, #cached-token: 14336, token usage: 0.03, #running-req: 1, #queue-req: 0, #pending-token: 0, cpu graph: False, input throughput (token/s): 28.69</pre>
+<p>首条请求被准入时，调度器的等待队列里<b>只有它自己</b>（<span class="mono">#queue-req: 0</span>）；
+其余 7 条要再过约 15 s 才<b>整批</b>进入
+（<span class="mono">#new-seq: 7</span>，即首条之后剩下的 7 条一起进来）。
+逐请求明细同样指向服务端：把同一轮 8 条请求放在一起看，它们的端到端耗时几乎完全相同
+（轮内极差最大仅 8.0 ms），说明客户端确实是同时发出的，时间差只能出现在服务端的接收与派发环节。</p>
+<p>因此每一批次里多数请求的 TTFT 中包含了一段约 15 s 的<b>准入等待</b>，它不是 Prefill 开销。
+两点判读：</p>
+<ul>
+<li>这是<b>纯 CPU 单进程部署</b>的固有现象：HTTP 接收路径与「调度 + 前向计算」在同一进程内串行，
+一次长前向执行期间新到的请求无法被及时读取。它与压测脚本、与本次负载设计无关。</li>
+<li>它<b>对两组同等存在</b>（两组每一轮都只有 1 条先被准入），因此两组的<b>相对差异</b>仍然可信；
+而缓存命中率、实际 Prefill token 数等指标直接取自服务端计数器，完全不受时序影响。</li>
+</ul>
+<p class="small">另：同一批内多条请求的 Prefill 会被合并进同一个 <span class="mono">Prefill batch</span>，
+服务端日志的批次粒度与「每请求一条」并不一一对应，这也是 4.2 节服务端累计值与客户端
+Σ<span class="mono">meta_info</span> 之间存在小幅差异的原因；核对时以客户端逐请求 meta_info 为准（主表）。</p>
+<h3>6.4 结论</h3>
+<ol>
+<li><b>前缀缓存确实生效且收益显著</b>：共享前缀组把 97.01% 的 prompt token
+ 变成命中，实际 Prefill token 由 67,584 降至
+ 2,019；端到端 p50 由 66,321.2 ms 降至
+ 29,950.0 ms（降幅 54.8%），
+ TTFT p50 降幅 53.8%，
+ 输出吞吐由 1.92 升到 4.31 tok/s。</li>
+<li><b>收益来自 Prefill，而不是 Decode 本身</b>：两组的 Decode 步数（16）与上下文总长完全相同，
+ 因此 Decode 单步的计算量没有变化。TPOT p50 的读数从 1,976.4 ms
+ 变为 864.0 ms，属于「同批同步」下的时长再分配（见 6.1），
+ 不能据此认为 Decode 变快了。</li>
+<li><b>跨组比较以端到端与吞吐为准</b>：TTFT / TPOT 在同一轮内此消彼长、二者之和近似恒定，
+ 单独引用其中任一个都会得到片面的结论（6.1）；而多出的 Prefill 量在多寡上与墙钟之差一致（6.2）。</li>
+<li><b>两组输入输出长度一致、成功率均为 32/32 与
+ 32/32</b>，说明差异来自前缀能否复用，而不是负载本身的差异。</li>
+</ol>
+<h3>6.5 执行顺序的稳健性检查（run-2：交换两组顺序）</h3>
+<table>
+<tr><th>指标</th><th class="n">run-1（shared → dispersed）</th><th class="n">run-2（dispersed → shared）</th></tr>
+<tr><td>共享前缀 缓存命中率</td><td class="n">97.01%</td><td class="n">97.02%</td></tr>
+<tr><td>共享前缀 实际 Prefill tokens</td><td class="n">2,019</td><td class="n">2,017</td></tr>
+<tr><td>共享前缀 TTFT p50（ms）</td><td class="n">17,338.0</td><td class="n">15,603.0</td></tr>
+<tr><td>分散前缀 TTFT p50（ms）</td><td class="n">37,520.4</td><td class="n">39,745.1</td></tr>
+<tr><td>分散前缀 实际 Prefill tokens</td><td class="n">67,584</td><td class="n">67,584</td></tr>
+</table>
+<p class="small">交换顺序后结论不变，说明观测到的差异不是执行顺序（如首组承担额外 JIT / 线程池预热开销）造成的。</p>
+</div>
+<div class="page chartpage">
+<h2>七、任务二：一条 /generate 请求的完整流程</h2>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 1184" width="100%" font-family="Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">
+<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#5b7699"/></marker><marker id="ah2" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#c8901a"/></marker></defs>
+<rect x="0" y="0" width="780" height="1184" fill="#ffffff"/>
+<text x="390.0" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#16283d">一条 /generate 请求在 SGLang v0.5.14 中的处理流程</text>
+<text x="390.0" y="39" text-anchor="middle" font-size="10.5" fill="#5b6b7c">主流程（任务书指定主线）；括号内为文件路径与行号，均可在 python/sglang/srt 下核对</text>
+<rect x="8" y="52.0" width="764" height="102.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="69.0" font-size="10.8" font-weight="700" fill="#2b4a6f">① 接入层 · FastAPI HTTP（SSE 流式）</text>
+<rect x="24" y="78.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="91.4" font-size="12.6" font-weight="600" fill="#16283d">generate_request —— POST /generate 路由</text>
+<text x="34" y="103.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">entrypoints/http_server.py:765（路由）, 769（处理函数）</text>
+<rect x="24" y="116.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="129.4" font-size="12.6" font-weight="600" fill="#16283d">stream_results() 逐片产出 SSE</text>
+<text x="34" y="141.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">entrypoints/http_server.py:773 → yield b"data: " + dumps_json(out) + b"\n\n"（:778）</text>
+<line x1="390.0" y1="108.0" x2="390.0" y2="115.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="165.0" width="764" height="102.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="182.0" font-size="10.8" font-weight="700" fill="#2b4a6f">② TokenizerManager：请求规范化与下发</text>
+<rect x="24" y="191.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="204.4" font-size="12.6" font-weight="600" fill="#16283d">TokenizerManager.generate_request</text>
+<text x="34" y="216.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/tokenizer_manager.py:576（normalize_batch_and_arguments → _init_req_state）</text>
+<line x1="390.0" y1="146.0" x2="390.0" y2="190.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="229.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="242.4" font-size="12.6" font-weight="600" fill="#16283d">_tokenize_one_request → _send_one_request</text>
+<text x="34" y="254.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/tokenizer_manager.py:782, 1319（经 ZMQ 发往 Scheduler 进程）</text>
+<line x1="390.0" y1="221.0" x2="390.0" y2="228.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="278.0" width="764" height="140.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="295.0" font-size="10.8" font-weight="700" fill="#2b4a6f">③ Scheduler 事件循环 → 等待队列</text>
+<rect x="24" y="304.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="317.4" font-size="12.6" font-weight="600" fill="#16283d">event_loop_normal：recv_requests → process_input_requests</text>
+<text x="34" y="329.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:1505（主循环）, 1628（请求入队分发）</text>
+<line x1="390.0" y1="259.0" x2="390.0" y2="303.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="342.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="355.4" font-size="12.6" font-weight="600" fill="#16283d">★ _add_request_to_queue → self.waiting_queue.append(req)</text>
+<text x="34" y="367.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:2258, 2265</text>
+<line x1="390.0" y1="334.0" x2="390.0" y2="341.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="24" y="380.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="393.4" font-size="12.6" font-weight="600" fill="#16283d">get_next_batch_to_run → get_new_batch_prefill</text>
+<text x="34" y="405.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:2702（组批入口）</text>
+<line x1="390.0" y1="372.0" x2="390.0" y2="379.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="429.0" width="764" height="254.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="446.0" font-size="10.8" font-weight="700" fill="#2b4a6f">④ 前缀匹配与组批（PrefillAdder / ScheduleBatch）</text>
+<rect x="24" y="455.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="468.4" font-size="12.6" font-weight="600" fill="#16283d">policy.calc_priority(waiting_queue, running_batch)</text>
+<text x="34" y="480.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:2761（默认 cache_aware=LPM：最长前缀优先）</text>
+<line x1="390.0" y1="410.0" x2="390.0" y2="454.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="493.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="506.4" font-size="12.6" font-weight="600" fill="#16283d">PrefillAdder（本轮 token 预算 / 准入控制）</text>
+<text x="34" y="518.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/schedule_policy.py:425（类定义）</text>
+<line x1="390.0" y1="485.0" x2="390.0" y2="492.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="531.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="544.4" font-size="12.6" font-weight="600" fill="#16283d">Req.init_next_round_input → tree_cache.match_prefix</text>
+<text x="34" y="556.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/schedule_batch.py:1123, 1168（真正发起前缀匹配）</text>
+<line x1="390.0" y1="523.0" x2="390.0" y2="530.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="569.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="582.4" font-size="12.6" font-weight="600" fill="#16283d">RadixCache.match_prefix → _match_prefix_helper</text>
+<text x="34" y="594.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">mem_cache/radix_cache.py:358, 643（沿基数树逐段比对；命中止于节点中部时 _split_node:669）</text>
+<line x1="390.0" y1="561.0" x2="390.0" y2="568.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="607.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="620.4" font-size="12.6" font-weight="600" fill="#16283d">★ set_extend_input_len( len(input) − len(prefix_indices) )</text>
+<text x="34" y="632.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/schedule_batch.py:1221 → 1525</text>
+<line x1="390.0" y1="599.0" x2="390.0" y2="606.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="24" y="645.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="658.4" font-size="12.6" font-weight="600" fill="#16283d">PrefillAdder.add_one_req 通过 → 组装 ScheduleBatch</text>
+<text x="34" y="670.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/schedule_policy.py:858；managers/schedule_batch.py:1671</text>
+<line x1="390.0" y1="637.0" x2="390.0" y2="644.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="694.0" width="764" height="140.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="711.0" font-size="10.8" font-weight="700" fill="#2b4a6f">⑤ Model Worker：Prefill 与 Decode</text>
+<rect x="24" y="720.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="733.4" font-size="12.6" font-weight="600" fill="#16283d">Scheduler.run_batch → TpModelWorker.forward_batch_generation</text>
+<text x="34" y="745.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:3145；managers/tp_worker.py:482</text>
+<line x1="390.0" y1="675.0" x2="390.0" y2="719.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="758.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="771.4" font-size="12.6" font-weight="600" fill="#16283d">ModelRunner.forward（Prefill = extend / Decode = 自回归逐 token）</text>
+<text x="34" y="783.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">model_executor/model_runner.py:2896；注意力后端 layers/attention/torch_native_backend.py:279 / 338</text>
+<line x1="390.0" y1="750.0" x2="390.0" y2="757.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="796.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="809.4" font-size="12.6" font-weight="600" fill="#16283d">自回归循环：每步 Decode 产出 1 个 token，直到 finish_reason 非空</text>
+<text x="34" y="821.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">本机 attention_backend='torch_native'（无 AMX 时自动回退，见服务端启动日志）</text>
+<line x1="390.0" y1="788.0" x2="390.0" y2="795.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="845.0" width="764" height="140.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="862.0" font-size="10.8" font-weight="700" fill="#2b4a6f">⑥ 新产生的 KV 写回 RadixCache</text>
+<rect x="24" y="871.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="884.4" font-size="12.6" font-weight="600" fill="#16283d">process_batch_result → batch_result_processor</text>
+<text x="34" y="896.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:3367；managers/scheduler_components/batch_result_processor.py</text>
+<line x1="390.0" y1="826.0" x2="390.0" y2="870.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="909.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="922.4" font-size="12.6" font-weight="600" fill="#16283d">★ maybe_cache_unfinished_req → RadixCache.cache_unfinished_req</text>
+<text x="34" y="934.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">mem_cache/common.py:113；mem_cache/radix_cache.py:485（chunked prefill / 未结束请求的中间 KV）</text>
+<line x1="390.0" y1="901.0" x2="390.0" y2="908.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="24" y="947.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="960.4" font-size="12.6" font-weight="600" fill="#16283d">★ release_kv_cache → RadixCache.cache_finished_req → insert</text>
+<text x="34" y="972.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">mem_cache/common.py:629；mem_cache/radix_cache.py:438, 418（按 page 对齐后挂到基数树）</text>
+<line x1="390.0" y1="939.0" x2="390.0" y2="946.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="8" y="996.0" width="764" height="178.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="1013.0" font-size="10.8" font-weight="700" fill="#2b4a6f">⑦ 生成结果流式返回（Decode 每一步都会走一次）</text>
+<rect x="24" y="1022.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="1035.4" font-size="12.6" font-weight="600" fill="#16283d">Scheduler.stream_output（打包 BatchTokenIDOutput）</text>
+<text x="34" y="1047.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler_components/output_streamer.py:91</text>
+<line x1="390.0" y1="977.0" x2="390.0" y2="1021.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="1060.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="1073.4" font-size="12.6" font-weight="600" fill="#16283d">DetokenizerManager.event_loop（增量反分词）</text>
+<text x="34" y="1085.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/detokenizer_manager.py:159</text>
+<line x1="390.0" y1="1052.0" x2="390.0" y2="1059.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="1098.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="1111.4" font-size="12.6" font-weight="600" fill="#16283d">★ TokenizerManager._handle_batch_output → _wait_one_response → yield</text>
+<text x="34" y="1123.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/tokenizer_manager.py:1839（组装 meta_info）, 1425（逐片 await 后 yield）</text>
+<line x1="390.0" y1="1090.0" x2="390.0" y2="1097.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="24" y="1136.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="1149.4" font-size="12.6" font-weight="600" fill="#16283d">http_server.stream_results 逐片下发 SSE → 客户端 readline() 收到 data:{...}</text>
+<text x="34" y="1161.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">entrypoints/http_server.py:778；客户端 TTFT 即「首个非空 text 分片到达」的时刻</text>
+<line x1="390.0" y1="1128.0" x2="390.0" y2="1135.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+</svg>
+</div>
+<div class="page tight">
+<h2>八、任务二：说明（不超过 1 页）</h2>
+<p class="small">下图按任务书指定主线绘制，图中 <b>★</b> 标记的节点对应本节要回答的四个问题；每个节点下方的等宽文本即该函数所在的<b>文件与行号</b>，均可在 <span class="mono">python/sglang/srt</span> 下逐一核对。</p>
+<h3>8.1 请求如何进入等待队列</h3>
+<p>HTTP 层 <span class="mono">generate_request</span>（<span class="mono">entrypoints/http_server.py:769</span>）
+在 <span class="mono">obj.stream</span> 为真时返回 <span class="mono">stream_results()</span> 这个异步生成器。
+<span class="mono">TokenizerManager.generate_request</span>（<span class="mono">managers/tokenizer_manager.py:576</span>）
+先做参数归一化，再经 <span class="mono">_tokenize_one_request</span>（:782）分词，用
+<span class="mono">_send_one_request</span>（:1319）把 <span class="mono">TokenizedGenerateReqInput</span>
+经 ZMQ 发给 Scheduler 进程。Scheduler 的 <span class="mono">event_loop_normal</span>（<span class="mono">managers/scheduler.py:1505</span>）
+每轮先 <span class="mono">recv_requests</span> 取回请求，交给 <span class="mono">process_input_requests</span>（:1628），
+后者最终调用 <span class="mono">_add_request_to_queue</span>（:2258），把 <span class="mono">Req</span>
+追加进 <span class="mono">self.waiting_queue</span>（:2265）并打上入队时间戳。到此请求才真正「在等」。</p>
+
+<h3>8.2 前缀匹配如何减少本轮 Prefill token</h3>
+<p>组批时 <span class="mono">get_new_batch_prefill</span>（<span class="mono">scheduler.py:2702</span>）
+先按调度策略 <span class="mono">policy.calc_priority</span>（:2761，默认 cache-aware 的 LPM，
+即最长前缀优先）对等待队列排序，再构造 <span class="mono">PrefillAdder</span>
+（<span class="mono">managers/schedule_policy.py:425</span>）逐条准入。对每条请求，先调用
+<span class="mono">Req.init_next_round_input</span>（<span class="mono">managers/schedule_batch.py:1123</span>），
+其中 <span class="mono">tree_cache.match_prefix</span>（:1168）落到
+<span class="mono">RadixCache.match_prefix</span>（<span class="mono">mem_cache/radix_cache.py:358</span>），
+由 <span class="mono">_match_prefix_helper</span>（:643）沿基数树逐段比对，返回已命中前缀的
+KV slot 索引 <span class="mono">prefix_indices</span>（命中止于节点中部时用
+<span class="mono">_split_node</span>（:669）切分节点以暴露精确边界）。随后
+<span class="mono">set_extend_input_len(len(input) − len(prefix_indices))</span>（:1221）
+把本请求本轮要真正计算的 token 数扣掉已命中的部分。<b>减少 Prefill token 的机制就是这一步</b>：
+这些 token 的 K/V 已在池中被前序请求算好并写入，本轮既不重算也不重写，只需把它们的 slot 索引拼进
+本轮的 <span class="mono">prefix_indices</span>。<span class="mono">PrefillAdder.add_one_req</span>
+（<span class="mono">schedule_policy.py:858</span>）再按剩余 token 预算判定能否纳入本批，通过后组装成
+<span class="mono">ScheduleBatch</span>（<span class="mono">schedule_batch.py:1671</span>）。</p>
+
+<h3>8.3 新产生的 KV 如何写回缓存</h3>
+<p>前向由 <span class="mono">Scheduler.run_batch</span>（<span class="mono">scheduler.py:3145</span>）
+调用 <span class="mono">TpModelWorker.forward_batch_generation</span>
+（<span class="mono">managers/tp_worker.py:482</span>）→ <span class="mono">ModelRunner.forward</span>
+（<span class="mono">model_executor/model_runner.py:2896</span>），注意力后端按批的
+<span class="mono">forward_mode</span> 走 <span class="mono">forward_extend</span>（Prefill）或
+<span class="mono">forward_decode</span>（Decode）。算出的 KV 先按 paged 布局写进 KV pool，
+并在 <span class="mono">req_to_token</span> 里登记 slot。之后由
+<span class="mono">process_batch_result</span>（<span class="mono">scheduler.py:3367</span>）分派到
+<span class="mono">batch_result_processor</span>，两条路径回写基数树：
+<b>未结束</b>（chunked prefill 的中间段）走
+<span class="mono">maybe_cache_unfinished_req</span>（<span class="mono">mem_cache/common.py:113</span>）→
+<span class="mono">RadixCache.cache_unfinished_req</span>（<span class="mono">radix_cache.py:485</span>）；
+<b>已结束</b>走 <span class="mono">release_kv_cache</span>（:629）→
+<span class="mono">RadixCache.cache_finished_req</span>（:438）→ <span class="mono">insert</span>（:418）。
+插入前序列会按 <span class="mono">page_size</span> 做 <span class="mono">page_aligned</span> 对齐，
+再把 <span class="mono">token → KV slot</span> 的映射挂到基数树上；重复部分对应的 KV 立即
+<span class="mono">free</span> 掉，并调整 <span class="mono">lock_ref</span> 引用计数，
+使暂未被引用的节点成为可驱逐（evictable）状态。</p>
+
+<h3>8.4 生成结果如何流式返回</h3>
+<p>Decode 的每一步都会经 <span class="mono">Scheduler.stream_output</span>
+（<span class="mono">managers/scheduler_components/output_streamer.py:91</span>）把本步新 token
+打包成 <span class="mono">BatchTokenIDOutput</span> 发给 Detokenizer 进程；
+<span class="mono">DetokenizerManager.event_loop</span>
+（<span class="mono">managers/detokenizer_manager.py:159</span>）做增量反分词（只为新 token 解码，
+避免重复处理整段），再送回 TokenizerManager。
+<span class="mono">_handle_batch_output</span>（<span class="mono">tokenizer_manager.py:1839</span>）
+组装 <span class="mono">meta_info</span>（含 <span class="mono">prompt_tokens</span>、
+<span class="mono">completion_tokens</span>、<span class="mono">cached_tokens</span>、
+<span class="mono">finish_reason</span>），<span class="mono">_wait_one_response</span>（:1425）
+逐片 <span class="mono">yield</span>；最终由
+<span class="mono">http_server.stream_results</span>（<span class="mono">http_server.py:778</span>）
+以 SSE 形式写出 <span class="mono">data: {...}\n\n</span>。
+客户端读到首个「携带生成 token 的分片」的时刻即 TTFT，之后每片之间的间隔即 TPOT 的实测来源。</p>
+<div class="note"><b>与实测的呼应</b>：正因为 8.2 中「已缓存前缀既不重算也不重写」，本实验共享前缀组的实际 Prefill token 才从 67,584 降到 2,019；而 8.4 中 Decode 每步都要重新读入全部已缓存 K/V，且上下文总长 N 与 Decode 步数（<span class="mono">max_new_tokens = 16</span>）两组完全一致——<b>所以 Decode 本身的单步计算量并不因前缀命中而减少</b>，两组 TTFT / TPOT 的变化是「同批同步」下的时长再分配，见 6.1 节。</div>
+</div>
+<div class="page">
+<h2>九、作业感受</h2>
+<h3>（1）简述下你是如何完成第二次挑战的</h3>
+<p>第二次挑战复用第一次挑战已经搭好的 SGLang 0.5.14 在线服务（WSL2 + 纯 CPU + Qwen3-0.6B），
+因此第一步不是重建环境，而是<b>先确认服务的可用状态</b>与缓存配置，再把注意力放在实验本身的可信度上。</p>
+<p>具体过程分三步。第一步是<b>把任务书翻译成脚本</b>：把「32 条请求 / 并发 8 / 温度 0 /
+max_new_tokens 16 / ignore_eos / seed 2026」这些硬性条件写成脚本里的常量，把
+「组前 flush_cache 并确认成功」「共享前缀组额外发一条预热请求」「预热不计入结果」
+这些容易漏掉的约束做成流程里的显式步骤，并让每一步都在结果目录留下可核对的文件
+（<span class="mono">flush_cache.json</span>、<span class="mono">warmup_request.json</span> 等）。</p>
+<p>第二步是<b>把控制变量做到位</b>。任务书要求「除前缀能否复用外其余一致」，我最初的做法是两组各造一份语料，
+但很快发现这样比出来的差异里混着内容差异。于是改成用「只替换位置 0 的 token」的方式构造分散前缀组：
+其余 2047 个 token 与共享前缀组逐位相同，并在代码里加了断言把它固定下来。
+这样唯一的自变量就只剩「前缀能否被 RadixCache 复用」。</p>
+<p>第三步是<b>让数据自己说话</b>。所有指标都不在报告里手抄，而是由脚本从服务端返回的
+<span class="mono">meta_info</span> 汇总成 <span class="mono">summary.json</span>，
+再由另一个脚本读它生成报告表格，同时把服务端日志里
+<span class="mono">Prefill batch</span> 行的 <span class="mono">#cached-token</span>
+另行汇总作为独立旁证。任务二则反过来：先在源码里逐跳把函数和行号找出来，
+再用一个生成脚本把它画成流程图，保证图上的每一处标注都能回到源码核对。</p>
+<p>AI 在这里的作用主要是<b>加速定位与校验</b>：帮我快速在 0.5.14 的源码树里找到
+<span class="mono">match_prefix</span>、<span class="mono">cache_finished_req</span>
+等函数的位置，以及提示「命中之后仍需读取已缓存 K/V」这类容易被忽略的细节；
+但它给出的行号和结论我都回到源码逐条复核过，与 0.5.14 不符的一律以源码为准。</p>
+
+<h3>（2）你觉得哪部分工作最困难，你是如何克服这个困难的</h3>
+<div class="blank">【本题要求「禁止 AI 辅助撰写」，请本人填写】</div>
+
+<h3>（3）类似的从 0 到 1 的科研工作，需要包含哪些方面的研究，对你今后的科研工作有什么启发</h3>
+<div class="blank">【本题要求「禁止 AI 辅助撰写」，请本人填写】</div>
+
+</div>
+</body></html>

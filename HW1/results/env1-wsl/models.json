@@ -1,0 +1,14 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "/opt/sgl-workspace/models/Qwen3-0.6B",
+      "object": "model",
+      "created": 1790390946,
+      "owned_by": "sglang",
+      "root": "/opt/sgl-workspace/models/Qwen3-0.6B",
+      "parent": null,
+      "max_model_len": 40960
+    }
+  ]
+}

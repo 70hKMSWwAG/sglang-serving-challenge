@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 1184" width="100%" font-family="Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">
+<defs><marker id="ah" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#5b7699"/></marker><marker id="ah2" markerWidth="9" markerHeight="9" refX="4.5" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#c8901a"/></marker></defs>
+<rect x="0" y="0" width="780" height="1184" fill="#ffffff"/>
+<text x="390.0" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#16283d">一条 /generate 请求在 SGLang v0.5.14 中的处理流程</text>
+<text x="390.0" y="39" text-anchor="middle" font-size="10.5" fill="#5b6b7c">主流程（任务书指定主线）；括号内为文件路径与行号，均可在 python/sglang/srt 下核对</text>
+<rect x="8" y="52.0" width="764" height="102.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="69.0" font-size="10.8" font-weight="700" fill="#2b4a6f">① 接入层 · FastAPI HTTP（SSE 流式）</text>
+<rect x="24" y="78.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="91.4" font-size="12.6" font-weight="600" fill="#16283d">generate_request —— POST /generate 路由</text>
+<text x="34" y="103.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">entrypoints/http_server.py:765（路由）, 769（处理函数）</text>
+<rect x="24" y="116.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="129.4" font-size="12.6" font-weight="600" fill="#16283d">stream_results() 逐片产出 SSE</text>
+<text x="34" y="141.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">entrypoints/http_server.py:773 → yield b"data: " + dumps_json(out) + b"\n\n"（:778）</text>
+<line x1="390.0" y1="108.0" x2="390.0" y2="115.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="165.0" width="764" height="102.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="182.0" font-size="10.8" font-weight="700" fill="#2b4a6f">② TokenizerManager：请求规范化与下发</text>
+<rect x="24" y="191.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="204.4" font-size="12.6" font-weight="600" fill="#16283d">TokenizerManager.generate_request</text>
+<text x="34" y="216.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/tokenizer_manager.py:576（normalize_batch_and_arguments → _init_req_state）</text>
+<line x1="390.0" y1="146.0" x2="390.0" y2="190.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="229.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="242.4" font-size="12.6" font-weight="600" fill="#16283d">_tokenize_one_request → _send_one_request</text>
+<text x="34" y="254.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/tokenizer_manager.py:782, 1319（经 ZMQ 发往 Scheduler 进程）</text>
+<line x1="390.0" y1="221.0" x2="390.0" y2="228.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="278.0" width="764" height="140.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="295.0" font-size="10.8" font-weight="700" fill="#2b4a6f">③ Scheduler 事件循环 → 等待队列</text>
+<rect x="24" y="304.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="317.4" font-size="12.6" font-weight="600" fill="#16283d">event_loop_normal：recv_requests → process_input_requests</text>
+<text x="34" y="329.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:1505（主循环）, 1628（请求入队分发）</text>
+<line x1="390.0" y1="259.0" x2="390.0" y2="303.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="342.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="355.4" font-size="12.6" font-weight="600" fill="#16283d">★ _add_request_to_queue → self.waiting_queue.append(req)</text>
+<text x="34" y="367.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:2258, 2265</text>
+<line x1="390.0" y1="334.0" x2="390.0" y2="341.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="24" y="380.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="393.4" font-size="12.6" font-weight="600" fill="#16283d">get_next_batch_to_run → get_new_batch_prefill</text>
+<text x="34" y="405.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:2702（组批入口）</text>
+<line x1="390.0" y1="372.0" x2="390.0" y2="379.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="429.0" width="764" height="254.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="446.0" font-size="10.8" font-weight="700" fill="#2b4a6f">④ 前缀匹配与组批（PrefillAdder / ScheduleBatch）</text>
+<rect x="24" y="455.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="468.4" font-size="12.6" font-weight="600" fill="#16283d">policy.calc_priority(waiting_queue, running_batch)</text>
+<text x="34" y="480.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:2761（默认 cache_aware=LPM：最长前缀优先）</text>
+<line x1="390.0" y1="410.0" x2="390.0" y2="454.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="493.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="506.4" font-size="12.6" font-weight="600" fill="#16283d">PrefillAdder（本轮 token 预算 / 准入控制）</text>
+<text x="34" y="518.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/schedule_policy.py:425（类定义）</text>
+<line x1="390.0" y1="485.0" x2="390.0" y2="492.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="531.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="544.4" font-size="12.6" font-weight="600" fill="#16283d">Req.init_next_round_input → tree_cache.match_prefix</text>
+<text x="34" y="556.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/schedule_batch.py:1123, 1168（真正发起前缀匹配）</text>
+<line x1="390.0" y1="523.0" x2="390.0" y2="530.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="569.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="582.4" font-size="12.6" font-weight="600" fill="#16283d">RadixCache.match_prefix → _match_prefix_helper</text>
+<text x="34" y="594.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">mem_cache/radix_cache.py:358, 643（沿基数树逐段比对；命中止于节点中部时 _split_node:669）</text>
+<line x1="390.0" y1="561.0" x2="390.0" y2="568.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="607.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="620.4" font-size="12.6" font-weight="600" fill="#16283d">★ set_extend_input_len( len(input) − len(prefix_indices) )</text>
+<text x="34" y="632.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/schedule_batch.py:1221 → 1525</text>
+<line x1="390.0" y1="599.0" x2="390.0" y2="606.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="24" y="645.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="658.4" font-size="12.6" font-weight="600" fill="#16283d">PrefillAdder.add_one_req 通过 → 组装 ScheduleBatch</text>
+<text x="34" y="670.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/schedule_policy.py:858；managers/schedule_batch.py:1671</text>
+<line x1="390.0" y1="637.0" x2="390.0" y2="644.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="694.0" width="764" height="140.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="711.0" font-size="10.8" font-weight="700" fill="#2b4a6f">⑤ Model Worker：Prefill 与 Decode</text>
+<rect x="24" y="720.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="733.4" font-size="12.6" font-weight="600" fill="#16283d">Scheduler.run_batch → TpModelWorker.forward_batch_generation</text>
+<text x="34" y="745.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:3145；managers/tp_worker.py:482</text>
+<line x1="390.0" y1="675.0" x2="390.0" y2="719.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="758.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="771.4" font-size="12.6" font-weight="600" fill="#16283d">ModelRunner.forward（Prefill = extend / Decode = 自回归逐 token）</text>
+<text x="34" y="783.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">model_executor/model_runner.py:2896；注意力后端 layers/attention/torch_native_backend.py:279 / 338</text>
+<line x1="390.0" y1="750.0" x2="390.0" y2="757.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="796.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="809.4" font-size="12.6" font-weight="600" fill="#16283d">自回归循环：每步 Decode 产出 1 个 token，直到 finish_reason 非空</text>
+<text x="34" y="821.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">本机 attention_backend='torch_native'（无 AMX 时自动回退，见服务端启动日志）</text>
+<line x1="390.0" y1="788.0" x2="390.0" y2="795.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="8" y="845.0" width="764" height="140.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="862.0" font-size="10.8" font-weight="700" fill="#2b4a6f">⑥ 新产生的 KV 写回 RadixCache</text>
+<rect x="24" y="871.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="884.4" font-size="12.6" font-weight="600" fill="#16283d">process_batch_result → batch_result_processor</text>
+<text x="34" y="896.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler.py:3367；managers/scheduler_components/batch_result_processor.py</text>
+<line x1="390.0" y1="826.0" x2="390.0" y2="870.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="909.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="922.4" font-size="12.6" font-weight="600" fill="#16283d">★ maybe_cache_unfinished_req → RadixCache.cache_unfinished_req</text>
+<text x="34" y="934.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">mem_cache/common.py:113；mem_cache/radix_cache.py:485（chunked prefill / 未结束请求的中间 KV）</text>
+<line x1="390.0" y1="901.0" x2="390.0" y2="908.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="24" y="947.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="960.4" font-size="12.6" font-weight="600" fill="#16283d">★ release_kv_cache → RadixCache.cache_finished_req → insert</text>
+<text x="34" y="972.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">mem_cache/common.py:629；mem_cache/radix_cache.py:438, 418（按 page 对齐后挂到基数树）</text>
+<line x1="390.0" y1="939.0" x2="390.0" y2="946.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="8" y="996.0" width="764" height="178.0" rx="7" fill="#f6f9fc" stroke="#d3dfeb" stroke-width="1"/>
+<text x="18" y="1013.0" font-size="10.8" font-weight="700" fill="#2b4a6f">⑦ 生成结果流式返回（Decode 每一步都会走一次）</text>
+<rect x="24" y="1022.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="1035.4" font-size="12.6" font-weight="600" fill="#16283d">Scheduler.stream_output（打包 BatchTokenIDOutput）</text>
+<text x="34" y="1047.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/scheduler_components/output_streamer.py:91</text>
+<line x1="390.0" y1="977.0" x2="390.0" y2="1021.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="1060.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="1073.4" font-size="12.6" font-weight="600" fill="#16283d">DetokenizerManager.event_loop（增量反分词）</text>
+<text x="34" y="1085.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/detokenizer_manager.py:159</text>
+<line x1="390.0" y1="1052.0" x2="390.0" y2="1059.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+<rect x="24" y="1098.0" width="752" height="30" rx="5" fill="#fff9e8" stroke="#d9a72a" stroke-width="1.4"/>
+<text x="34" y="1111.4" font-size="12.6" font-weight="600" fill="#16283d">★ TokenizerManager._handle_batch_output → _wait_one_response → yield</text>
+<text x="34" y="1123.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">managers/tokenizer_manager.py:1839（组装 meta_info）, 1425（逐片 await 后 yield）</text>
+<line x1="390.0" y1="1090.0" x2="390.0" y2="1097.0" stroke="#c8901a" stroke-width="1.3" marker-end="url(#ah2)"/>
+<rect x="24" y="1136.0" width="752" height="30" rx="5" fill="#ffffff" stroke="#b9c9da" stroke-width="1"/>
+<text x="34" y="1149.4" font-size="12.6" font-weight="600" fill="#16283d">http_server.stream_results 逐片下发 SSE → 客户端 readline() 收到 data:{...}</text>
+<text x="34" y="1161.2" font-size="10.2" fill="#5b6b7c" font-family="Consolas, Noto Sans CJK SC, Source Han Sans SC, Microsoft YaHei, sans-serif">entrypoints/http_server.py:778；客户端 TTFT 即「首个非空 text 分片到达」的时刻</text>
+<line x1="390.0" y1="1128.0" x2="390.0" y2="1135.0" stroke="#5b7699" stroke-width="1.3" marker-end="url(#ah)"/>
+</svg>

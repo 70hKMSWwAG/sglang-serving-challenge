@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "error": null,
+  "ttft_ms": 728.656299000022,
+  "tpot_ms": 109.78809026666265,
+  "e2e_ms": 2375.4776529999617,
+  "prompt_tokens": 16,
+  "cached_tokens": 15,
+  "completion_tokens": 16,
+  "finish_reason": {
+    "type": "length",
+    "length": 16
+  },
+  "n_chunks": 16
+}
