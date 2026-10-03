@@ -1,0 +1,32 @@
+{
+  "text": "ZUHGLGPQTSZGNGPW",
+  "output_ids": [
+    311,
+    956,
+    1021,
+    1098,
+    947,
+    1072,
+    873,
+    510,
+    591,
+    772,
+    285,
+    890,
+    403,
+    760,
+    249,
+    438
+  ],
+  "meta_info": {
+    "id": "f611ae17dfa64cccb60e8765ca432624",
+    "finish_reason": {
+      "type": "length"
+    },
+    "prompt_tokens": 2048,
+    "completion_tokens": 16,
+    "cached_tokens": 0,
+    "e2e_latency": 0.10526780299994698,
+    "ttft": 0.08599804400000721
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "endpoint": "/v1/chat/completions",
+  "models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "Qwen/Qwen3-0.6B",
+        "object": "model",
+        "created": 1791005083,
+        "owned_by": "sglang"
+      }
+    ]
+  },
+  "latency_s": 0.007806335000054787,
+  "response": {
+    "id": "chatcmpl-c0324855",
+    "object": "chat.completion",
+    "created": 1791005104,
+    "model": "Qwen/Qwen3-0.6B",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "Paris is the capital of France. SGLang OpenAI-compatible mock reply."
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 64,
+      "completion_tokens": 16,
+      "total_tokens": 80,
+      "cached_tokens": 0
+    }
+  }
+}

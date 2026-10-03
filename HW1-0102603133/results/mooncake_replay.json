@@ -1,0 +1,342 @@
+[
+  {
+    "req_id": "mc-00",
+    "planned_arrival_s": 0.18221,
+    "actual_send_s": 0.182299,
+    "trace_input_length": 512,
+    "trace_output_length": 20,
+    "status": "ok",
+    "input_tokens": 2921,
+    "output_tokens": 20,
+    "cached_tokens": 0,
+    "ttft_s": 0.12090374499996415,
+    "latency_s": 0.14496974599990153,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "KDEBEHGHSBKTSXGTQNGV"
+  },
+  {
+    "req_id": "mc-01",
+    "planned_arrival_s": 0.302583,
+    "actual_send_s": 0.302663,
+    "trace_input_length": 512,
+    "trace_output_length": 28,
+    "status": "ok",
+    "input_tokens": 2931,
+    "output_tokens": 28,
+    "cached_tokens": 0,
+    "ttft_s": 0.12130503299999873,
+    "latency_s": 0.15497368399996958,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "MLQZAFEXCHADINYLENOJAFAHINQP"
+  },
+  {
+    "req_id": "mc-02",
+    "planned_arrival_s": 0.404067,
+    "actual_send_s": 0.404159,
+    "trace_input_length": 512,
+    "trace_output_length": 32,
+    "status": "ok",
+    "input_tokens": 2933,
+    "output_tokens": 32,
+    "cached_tokens": 68,
+    "ttft_s": 0.11867717300003733,
+    "latency_s": 0.15714605499999834,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "QDWBUBCREZMPETADETOHORQDGFAHUBQH"
+  },
+  {
+    "req_id": "mc-03",
+    "planned_arrival_s": 0.415366,
+    "actual_send_s": 0.415439,
+    "trace_input_length": 512,
+    "trace_output_length": 28,
+    "status": "ok",
+    "input_tokens": 2931,
+    "output_tokens": 28,
+    "cached_tokens": 68,
+    "ttft_s": 0.11858790399992358,
+    "latency_s": 0.1522647719999668,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "SBCDIBOFMRQFQNGLOLCBWPWZCXYF"
+  },
+  {
+    "req_id": "mc-04",
+    "planned_arrival_s": 0.416324,
+    "actual_send_s": 0.416398,
+    "trace_input_length": 512,
+    "trace_output_length": 29,
+    "status": "ok",
+    "input_tokens": 2925,
+    "output_tokens": 29,
+    "cached_tokens": 68,
+    "ttft_s": 0.11835292599994318,
+    "latency_s": 0.15322674899994126,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "YXSRYPQZYRQBOVAFGNSZKXCNYFEDO"
+  },
+  {
+    "req_id": "mc-05",
+    "planned_arrival_s": 0.503189,
+    "actual_send_s": 0.503266,
+    "trace_input_length": 512,
+    "trace_output_length": 16,
+    "status": "ok",
+    "input_tokens": 2930,
+    "output_tokens": 16,
+    "cached_tokens": 68,
+    "ttft_s": 0.11855605199991714,
+    "latency_s": 0.13783043699993414,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "FIRQPIPOXMRAXKDU"
+  },
+  {
+    "req_id": "mc-06",
+    "planned_arrival_s": 0.542705,
+    "actual_send_s": 0.563891,
+    "trace_input_length": 512,
+    "trace_output_length": 32,
+    "status": "ok",
+    "input_tokens": 2934,
+    "output_tokens": 32,
+    "cached_tokens": 68,
+    "ttft_s": 0.11871417999998357,
+    "latency_s": 0.15720400500003961,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "BYHOZGBWTQJGXIDUTCHWDMNMXAPADCDC"
+  },
+  {
+    "req_id": "mc-07",
+    "planned_arrival_s": 0.759617,
+    "actual_send_s": 0.759707,
+    "trace_input_length": 512,
+    "trace_output_length": 32,
+    "status": "ok",
+    "input_tokens": 2931,
+    "output_tokens": 32,
+    "cached_tokens": 68,
+    "ttft_s": 0.11858422700004212,
+    "latency_s": 0.15706187900002533,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "SBCDIBOFMRQFQNGLOLCBWPWZCXYFCZCD"
+  },
+  {
+    "req_id": "mc-08",
+    "planned_arrival_s": 0.873372,
+    "actual_send_s": 0.873469,
+    "trace_input_length": 512,
+    "trace_output_length": 32,
+    "status": "ok",
+    "input_tokens": 2930,
+    "output_tokens": 32,
+    "cached_tokens": 68,
+    "ttft_s": 0.1185620270000527,
+    "latency_s": 0.15704734000007647,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "FIRQPIPOXMRAXKDUNAJMHIZELOJMTYDI"
+  },
+  {
+    "req_id": "mc-09",
+    "planned_arrival_s": 1.20644,
+    "actual_send_s": 1.206528,
+    "trace_input_length": 512,
+    "trace_output_length": 24,
+    "status": "ok",
+    "input_tokens": 2931,
+    "output_tokens": 24,
+    "cached_tokens": 68,
+    "ttft_s": 0.1186034859999836,
+    "latency_s": 0.14749611000002005,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "SBCDIBOFMRQFQNGLOLCBWPWZ"
+  },
+  {
+    "req_id": "mc-10",
+    "planned_arrival_s": 1.264204,
+    "actual_send_s": 1.264282,
+    "trace_input_length": 512,
+    "trace_output_length": 20,
+    "status": "ok",
+    "input_tokens": 2927,
+    "output_tokens": 20,
+    "cached_tokens": 67,
+    "ttft_s": 0.11847523000005822,
+    "latency_s": 0.1425489320000679,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "XSPQRWPEBUPGVYDITYLC"
+  },
+  {
+    "req_id": "mc-11",
+    "planned_arrival_s": 1.750489,
+    "actual_send_s": 1.750582,
+    "trace_input_length": 512,
+    "trace_output_length": 16,
+    "status": "ok",
+    "input_tokens": 2930,
+    "output_tokens": 16,
+    "cached_tokens": 68,
+    "ttft_s": 0.11857980199999929,
+    "latency_s": 0.13786475199992765,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "FIRQPIPOXMRAXKDU"
+  },
+  {
+    "req_id": "mc-12",
+    "planned_arrival_s": 1.940843,
+    "actual_send_s": 1.940931,
+    "trace_input_length": 512,
+    "trace_output_length": 32,
+    "status": "ok",
+    "input_tokens": 2931,
+    "output_tokens": 32,
+    "cached_tokens": 68,
+    "ttft_s": 0.1185939890000327,
+    "latency_s": 0.15708921999998893,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "SBCDIBOFMRQFQNGLOLCBWPWZCXYFCZCD"
+  },
+  {
+    "req_id": "mc-13",
+    "planned_arrival_s": 1.990987,
+    "actual_send_s": 1.99107,
+    "trace_input_length": 512,
+    "trace_output_length": 32,
+    "status": "ok",
+    "input_tokens": 2931,
+    "output_tokens": 32,
+    "cached_tokens": 68,
+    "ttft_s": 0.118592192000051,
+    "latency_s": 0.15706380000005993,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "SBCDIBOFMRQFQNGLOLCBWPWZCXYFCZCD"
+  },
+  {
+    "req_id": "mc-14",
+    "planned_arrival_s": 2.101887,
+    "actual_send_s": 2.101971,
+    "trace_input_length": 512,
+    "trace_output_length": 19,
+    "status": "ok",
+    "input_tokens": 2923,
+    "output_tokens": 19,
+    "cached_tokens": 68,
+    "ttft_s": 0.11827838399995017,
+    "latency_s": 0.14114955499996995,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "AVKFYDQPUVWRODGZCFU"
+  },
+  {
+    "req_id": "mc-15",
+    "planned_arrival_s": 2.115377,
+    "actual_send_s": 2.115447,
+    "trace_input_length": 512,
+    "trace_output_length": 32,
+    "status": "ok",
+    "input_tokens": 2930,
+    "output_tokens": 32,
+    "cached_tokens": 68,
+    "ttft_s": 0.1185651839999764,
+    "latency_s": 0.15704328300000725,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "FIRQPIPOXMRAXKDUNAJMHIZELOJMTYDI"
+  },
+  {
+    "req_id": "mc-16",
+    "planned_arrival_s": 2.70064,
+    "actual_send_s": 2.700726,
+    "trace_input_length": 512,
+    "trace_output_length": 32,
+    "status": "ok",
+    "input_tokens": 2929,
+    "output_tokens": 32,
+    "cached_tokens": 68,
+    "ttft_s": 0.11851768600001833,
+    "latency_s": 0.15700075200004449,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "UNUDIPCVIVIVQVMRMPCXGNCVWRIFKLQZ"
+  },
+  {
+    "req_id": "mc-17",
+    "planned_arrival_s": 2.725484,
+    "actual_send_s": 2.725567,
+    "trace_input_length": 512,
+    "trace_output_length": 24,
+    "status": "ok",
+    "input_tokens": 2925,
+    "output_tokens": 24,
+    "cached_tokens": 68,
+    "ttft_s": 0.11835760899998604,
+    "latency_s": 0.14720905600006517,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "YXSRYPQZYRQBOVAFGNSZKXCN"
+  },
+  {
+    "req_id": "mc-18",
+    "planned_arrival_s": 3.071832,
+    "actual_send_s": 3.071914,
+    "trace_input_length": 512,
+    "trace_output_length": 28,
+    "status": "ok",
+    "input_tokens": 2928,
+    "output_tokens": 28,
+    "cached_tokens": 68,
+    "ttft_s": 0.11848088800002188,
+    "latency_s": 0.15216549199999463,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "HGXQPIBQTQXQJSXOXSXURGFMTIHY"
+  },
+  {
+    "req_id": "mc-19",
+    "planned_arrival_s": 3.358115,
+    "actual_send_s": 3.358237,
+    "trace_input_length": 512,
+    "trace_output_length": 26,
+    "status": "ok",
+    "input_tokens": 2931,
+    "output_tokens": 26,
+    "cached_tokens": 68,
+    "ttft_s": 0.1186093470000742,
+    "latency_s": 0.14992059100006827,
+    "finish_reason": {
+      "type": "length"
+    },
+    "text_preview": "SBCDIBOFMRQFQNGLOLCBWPWZCX"
+  }
+]
