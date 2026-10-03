@@ -2,8 +2,8 @@
 
 ## 流程总览（对应流程图）
 1. **请求接收与排队**：FastAPI 收到 POST /generate，`TokenizerManager.generate_request()`（python/sglang/srt/entrypoints/http_server.py 调用；实现在 python/sglang/srt/managers/tokenizer_manager.py）把文本/ input_ids tokenize 成 Req，经 ZMQ 发给 Scheduler，进入 `scheduler.waiting_queue`。
-2. **调度与前缀匹配**：Scheduler 事件循环 `event_loop_normal()`（python/sglang/srt/managers/scheduler.py）每轮调用 `get_new_batch_prefill()`（schedule_policy.py 中 PrefillAdder），对每个 Req 执行 `match_prefix_for_req()` -> `RadixCache.match_prefix()`（python/sglang/srt/mem_cache/radix_cache.py），沿 radix 树按 token 前缀匹配已缓存的 KV，命中部分标记 prefix_indices，未命中部分才需要 Prefill。
-3. **Prefill**：`ScheduleBatch`（model_executor/schedule_batch.py）合并后发给 `TpModelWorker`（managers/tp_worker.py），对未命中 token 做一次前向计算，产出首个输出 token 与新 KV。
+2. **调度与前缀匹配**：Scheduler 事件循环 `event_loop_normal()`（python/sglang/srt/managers/scheduler.py）每轮调用 `get_new_batch_prefill()`（实现在 managers/scheduler.py，内部使用 managers/schedule_policy.py 的 PrefillAdder 做预算控制），对每个 Req 执行 `match_prefix_for_req()` -> `RadixCache.match_prefix()`（python/sglang/srt/mem_cache/radix_cache.py），沿 radix 树按 token 前缀匹配已缓存的 KV，命中部分标记 prefix_indices，未命中部分才需要 Prefill。
+3. **Prefill**：`ScheduleBatch`（managers/schedule_batch.py）合并后发给 `TpModelWorker`（managers/tp_worker.py），对未命中 token 做一次前向计算，产出首个输出 token 与新 KV。
 4. **Decode**：请求进入 running batch，`event_loop_normal` 每步对整批做一次 decode 前向，自回归生成直到 EOS 或 max_new_tokens。
 5. **缓存写回**：请求完成后 `RadixCache.cache_finished_req()`（未完成批次用 `cache_unfinished_req()`）把新产生的 KV 按 token 前缀插入 radix 树，供后续请求复用；LRU 淘汰。
 6. **流式返回**：TokenizerManager 的 stream_out 循环把每个新 token 封装为 JSON 行（data: {...}）经 HTTP chunked 推回客户端；`meta_info.finish_reason` 终止。

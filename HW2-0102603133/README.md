@@ -34,14 +34,14 @@ python -m sglang.launch_server \
 - 最大并发 8（ThreadPoolExecutor，同时受服务端 --max-running-requests 8 约束）。
 
 ```bash
-python src/measure_prefix_cache.py results/run1/prefix_cache.jsonl
+python src/measure_prefix_cache.py results/target1/myrun/prefix_cache.jsonl
 ```
 
 ## 回放命令
 ```bash
 # 服务就绪后
-python src/measure_prefix_cache.py ~/hw2/results/run1/prefix_cache.jsonl
-python src/gen_pdfs.py        # 重新生成报告 PDF
+python src/measure_prefix_cache.py ~/hw2/results/target1/myrun/prefix_cache.jsonl
+python src/gen_pdfs.py hw2       # 重新生成 HW2 报告 PDF（含合并版 report.pdf）
 ```
 
 ## 结果目录与报告表格对应关系
@@ -52,5 +52,6 @@ python src/gen_pdfs.py        # 重新生成报告 PDF
 - `results/target1/comparison_table.json` — 两组对照表（report.pdf 任务一表格的数据来源：TTFT/TPOT/E2E p50、p95、命中率、实际 Prefill tokens）
 - `results/target1/task2_source_flow.md` — 任务二源码流程追踪文字稿
 - `task1_results.pdf` / `task2_flow.pdf` — 任务一/任务二分册
-- `report.pdf` — 合订版报告（任务一 + 任务二 + AI 使用说明）
+- `作业感受.pdf` — 第二次挑战作业感受（三问）
+- `report.pdf` — 合订版报告（任务一 + 任务二 + AI 使用说明 + 作业感受）
 - `AI 使用说明情况（第二次挑战）.pdf` — 按作业要求命名

@@ -4,11 +4,12 @@
 
 ## 交付文件
 
-位于 `deliverables/`，共 6 份 PDF：
+位于 `deliverables/`，共 7 份 PDF：
 
 | 文件 | 内容 |
 |---|---|
-| `操作说明.pdf` | 截图 1（`GET /v1/models` + 一次推理）与截图 2（Mooncake workload 回放）的操作记录 |
+| `操作保存.pdf` | 截图 1（`GET /v1/models` + 一次推理）与截图 2（Mooncake workload 回放）合并 PDF（按任务书命名） |
+| `操作说明.pdf` | 两张截图对应的操作命令与记录（文字版） |
 | `流程图.pdf` | 单次请求经过 SGLang 推理框架的完整流程（client → tokenizer → scheduler/queue → prefill → KV Cache/RadixCache → decode → sampling → streaming output → metrics） |
 | `重点回答.pdf` | RadixAttention/RadixCache 解决的问题、page-sized KV cache 与 prefix reuse 对应 pipeline 位置、与 vLLM PagedAttention 的联系与差异 |
 | `作业感受.pdf` | 完成过程、最困难部分与克服方式、对科研工作的启发 |
@@ -31,7 +32,7 @@
 
 ```
 HW1/
-├── deliverables/               # 6 份 PDF（最终交付）
+├── deliverables/               # 7 份 PDF（最终交付）
 ├── src/run_workload.py         # Mooncake workload 采样与回放脚本
 └── results/
     ├── workload_results.jsonl   # 逐请求结果（input/output tokens、TTFT、latency）

@@ -34,7 +34,7 @@
 ```
 ├── HW1/                      # ③ 第一关最终交付（6 份 PDF + 脚本 + 逐请求结果）
 │   ├── README.md
-│   ├── deliverables/         # 6 份 PDF：操作说明 / 流程图 / 重点回答 / 作业感受 / AI使用说明 / 阅读文献笔记
+│   ├── deliverables/         # 7 份 PDF：操作保存（截图1/2）/ 操作说明 / 流程图 / 重点回答 / 作业感受 / AI使用说明 / 阅读文献笔记
 │   ├── src/run_workload.py   # Mooncake workload 采样与回放
 │   └── results/              # workload_results.jsonl / models.json / inference_response.json
 ├── HW2-0102603133/           # ③ 第二关最终交付
