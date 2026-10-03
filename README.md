@@ -1,5 +1,10 @@
 # SGLang 在线推理服务挑战 —— 部署、验证与 Mooncake Trace 压测
 
+> **另有一份完整复跑**：[`sandbox-run/`](sandbox-run/) —— 同一套作业在**无 GPU 云沙箱**
+> （cgroup 限额 4 核 / 8 GB）环境中的独立重做，含 HW1 六份交付 PDF、HW2 报告（6 页）与三轮实验的
+> 逐请求原始结果，以及 `sandbox-run/HW2-林彦超.zip`。两版结论一致；绝对数值因硬件不同不可直接互比，
+> 环境差异对比与复现步骤见 [`sandbox-run/README.md`](sandbox-run/README.md)。
+
 在 WSL2 中**以纯 CPU 推理**（Intel Core Ultra 5 338H「Panther Lake」，12 vCPU；
 本机核显 Intel Arc B370 在 WSL 内缺 Intel 计算运行时，故未参与计算），从源码构建 **SGLang 0.5.14** 并启动
 OpenAI-compatible 在线推理服务，使用 **Qwen/Qwen3-0.6B**，随后以
