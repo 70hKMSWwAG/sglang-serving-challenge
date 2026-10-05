@@ -4,7 +4,7 @@
 
 | 项目 | 版本/配置 |
 | --- | --- |
-| GPU | 1 × 24GB（实验用 RTX 4090D；4 × GPU 亦可，见 launch 说明） |
+| GPU | 1 × 24GB（实验用 RTX 4090D；与作业说明的 4 × GPU 有偏差，本次为单卡四后端，见第 7 节） |
 | 操作系统 | Ubuntu 22.04 容器（SeetaCloud） |
 | SGLang | **0.5.14**（`sglang[all]==0.5.14`，Python 3.12，sglang-env） |
 | Ray | **2.56.0**（`ray[serve]==2.56.0`，Python 3.10，ray-env） |
@@ -55,7 +55,7 @@ bash stop_all.sh   # 全部做完后停止 SGLang + Ray
   （≈69 req/s），组 A/C 的队列排空需 360~450s，300s 会人为截断
   （组 A 曾 130 条 `TimeoutError`）。B/D 的最大延迟远低于 300s，放宽超时不改变
   其结果，仅保证五组配置一致。每轮回放均覆盖 run-1 时传 `OVERWRITE=1`
-  （`run_all_rounds.sh` 已内置）。
+  （`run_all_rounds.sh` 已内置）。组 A/C 的 p95 绝大部分是排队等待，服务本身只有三四秒。
 - `ulimit -n`：容器默认 1024。压测端 `TCPConnector(limit=0)` + 2048 并发连接会
   耗尽 fd（首轮 873/2048 条 `OSError(24) Too many open files`）。
   `run_round.sh` 已自动提升到硬上限（65535），无需手工设置。
@@ -150,7 +150,7 @@ python src/target3/analyze.py \
 实际 Prefill token 数、TTFT p50/p95、端到端延迟 p95、四后端请求分布；
 `traffic_phases`（steady/burst/recovery）与 `popularity_tiers` 用于正文分析。
 
-**最终运行（2026-10-05，run-1）五组均为 2048/2048 全部成功**，与 report.pdf
+**最终运行（2026-10-05，run-1）五组均为 2048/2048 全部成功；该结果在五组统一把客户端单请求超时放宽到 900s 之后取得，官方默认 300s 会截断组 A 与组 C （二者队列排空需 361s 与 454s ）**，与 report.pdf
 主表一一对应。
 
 ## 7. 已知限制与与作业说明的偏差
