@@ -4,7 +4,7 @@
 # higher throughput and lower latency in the pre-fix runs); if the post-fix B
 # numbers contradict this, C/D are simply re-run with the other value.
 set -uo pipefail
-cd /root/HW3-姓名/src/target3
+cd "$(dirname "$(readlink -f "$0")")"
 
 export OVERWRITE=1
 export B_PICK=64
