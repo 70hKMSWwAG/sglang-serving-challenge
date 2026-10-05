@@ -153,7 +153,7 @@ python src/target3/analyze.py \
 **最终运行（2026-10-05，run-1）五组均为 2048/2048 全部成功；该结果在五组统一把客户端单请求超时放宽到 900s 之后取得，官方默认 300s 会截断组 A 与组 C （二者队列排空需 361s 与 454s ）**，与 report.pdf
 主表一一对应。
 
-## 7. 已知限制与与作业说明的偏差
+## 7. 已知限制与作业说明的偏差
 
 - 单 GPU（`NUM_GPUS=1`）时 4 个 SGLang 共享 24GB 显存，各
   `--mem-fraction-static=0.18`、`--attention-backend triton --disable-cuda-graph`；
