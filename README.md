@@ -158,8 +158,7 @@ python src/target3/analyze.py \
 - 单 GPU（`NUM_GPUS=1`）时 4 个 SGLang 共享 24GB 显存，各
   `--mem-fraction-static=0.18`、`--attention-backend triton --disable-cuda-graph`；
   KV 池较小，burst 阶段出现排队，但不影响正确性。4 卡时用 `NUM_GPUS=4` + 0.85。
-- 课程说明假设"预约四张 GPU"；本次实际为单卡多后端（`ray.cluster_utils.Cluster`
-  逻辑节点），组间对照不受影响，但绝对吞吐低于 4 卡环境。
+- 与作业说明的偏差：说明假设每组预约 4 张 GPU，本次实际为 1 张 4090D 上运行 4 个 SGLang 后端（NUM_GPUS=1，四进程共享 GPU 0，--mem-fraction-static=0.18）。四组的负载、模型、后端数量与路由实现以外的参数完全一致，因此 A/B/C/D 之间的横向对比成立；但单卡 KV 池更小，绝对吞吐与延迟数值不能与 4 卡环境的队伍直接比较。脚本保留了 NUM_GPUS=4 的路径，具备 4 卡时可原样复跑。
 - 压测端 `ulimit -n` 与单请求超时两处客户端配置按上文说明统一调整；
   `run_round.sh` 内已有注释与自动处理。
 - D 组路由器的队列长度探测是 RPC，会给每个路由决策增加少量延迟；
