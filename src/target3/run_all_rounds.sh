@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run all 5 target3 rounds sequentially (A, B1, B2, C, D) with the fd fix.
 # B_PICK is fixed to 64 (expected winner of the two B candidates: it had both
-# higher throughput and lower latency in the pre-fix runs); if the post-fix B
+# higher throughput and lower latency in the run-1 main table); if the post-fix B
 # numbers contradict this, C/D are simply re-run with the other value.
 set -uo pipefail
 cd "$(dirname "$(readlink -f "$0")")"
@@ -9,7 +9,7 @@ cd "$(dirname "$(readlink -f "$0")")"
 export OVERWRITE=1
 export B_PICK=64
 # Uniform client-side timeout for ALL groups (default 300s truncated group A
-# and C, whose queues drain in ~330s; B/D never come close, so this only
+# and C, whose queues drain in ~360-450s; B/D never come close, so this only
 # removes artificial failures, it does not change their numbers).
 export TIMEOUT_S=900
 
