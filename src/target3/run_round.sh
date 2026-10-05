@@ -176,9 +176,9 @@ echo "==> validating workload file"
 
 RUN_NAME="${GROUP}_run${RUN_INDEX}"
 # Client-side per-request timeout of the official generator (default 300s).
-# Group A (max_ongoing=5) drains its queue in ~330s, so the last requests hit
-# the 300s budget; re-run group A with TIMEOUT_S=900 to let it complete.
-TIMEOUT_S="${TIMEOUT_S:-300}"
+# Groups A and C drain their queues in ~361s / ~454s, so the last requests hit
+# the 300s budget; the default is therefore raised to 900s to match run_all_rounds.sh and the report.
+TIMEOUT_S="${TIMEOUT_S:-900}"
 ARGS=( --policy serve --run-name "$RUN_NAME"
   --router-name "$ROUTER_NAME" --max-ongoing-requests "$MAX_ONGOING"
   --base-url "http://127.0.0.1:$SERVE_PORT"
