@@ -57,7 +57,7 @@ echo "==> ulimit -n = $(ulimit -n)"
 
 GROUP="${1:?usage: run_round.sh <A_default|B_cand1|B_cand2|C_affinity|D_improved> [RUN_INDEX]}"
 RUN_INDEX="${2:-1}"
-B_PICK="${B_PICK:-32}"
+B_PICK="${B_PICK:-64}"
 BASE_PORT="${BASE_PORT:-30000}"
 SERVE_PORT="${SERVE_PORT:-8000}"
 # Course workload dir: prefer <repo>/workloads/..., fall back to the cloned
