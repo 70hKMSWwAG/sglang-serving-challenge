@@ -13,8 +13,8 @@ models/
 
 # Runtime / logs
 *.log
-!evidence/*.log
-!HW1/results/*.log
+!evidence/**/*.log
+!**/results/**/*.log
 sglang_server.log
 
 # OS / editor

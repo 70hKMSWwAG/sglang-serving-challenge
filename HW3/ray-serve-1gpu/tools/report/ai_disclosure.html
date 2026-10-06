@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AI 使用说明情况（第三次挑战）</title>
+<style>
+@page { size: A4 portrait; margin: 12mm 11mm; }
+html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: "Microsoft YaHei","PingFang SC",sans-serif; font-size: 10pt;
+       line-height: 1.6; color: #1a1a1a; margin: 0; }
+h1 { font-size: 14pt; margin: 0 0 4px 0; }
+h2 { font-size: 11pt; margin: 10px 0 4px 0; padding: 3px 8px; background: #eef2f7;
+     border-left: 4px solid #4e79a7; page-break-after: avoid; }
+p { margin: 4px 0; }
+code { font-family: Consolas, monospace; font-size: 9pt; background: #f4f4f4;
+       padding: 0 3px; }
+li { margin: 2px 0; }
+.small { font-size: 8.5pt; color: #555; }
+table { border-collapse: collapse; width: 100%; font-size: 9pt; }
+th, td { border: 1px solid #b9c4d0; padding: 3px 6px; }
+th { background: #eef2f7; }
+</style>
+</head>
+<body>
+
+<h1>AI 使用说明情况（第三次挑战）</h1>
+<p class="small">HW3-0102603133</p>
+
+<h2>1. 使用的 AI 模型与形态</h2>
+<p>WorkBuddy 内置 AI 编程智能体（agent 形态，具备本地文件读写、执行命令、
+以及通过 SSH/SFTP 操作远程 GPU 服务器的能力），底层为对话式大语言模型。
+全部交互在一个会话内完成。</p>
+
+<h2>2. 使用的提示词（原话摘录）</h2>
+<table>
+<tr><th>轮次</th><th>提示词 / 输入</th></tr>
+<tr><td>1</td><td>上传《第一/二/三关挑战》三份 PDF，并给出服务器登录方式
+<code>ssh -p 32566 root@connect.bjb2.seetacloud.com</code>（隐含指令：连接服务器，
+继续完成作业）</td></tr>
+<tr><td>2</td><td>交互式选择：署名用学号 <b>0102603133</b>；target1 数据
+<b>在服务器上重跑一次</b></td></tr>
+</table>
+<p class="small">其余为智能体的自主执行，未再人工逐步下指令。</p>
+
+<h2>3. AI 如何帮助我学习与完成作业</h2>
+<ul>
+<li><b>环境与实验编排：</b>核查服务器状态（1×RTX 4090D、四个 SGLang 0.5.14 后端、
+conda 双环境），编写/修正 <code>run_round.sh</code>、<code>run_all_rounds.sh</code>，
+按课程要求顺序完成 A/B1/B2/C/D 五轮回放。</li>
+<li><b>关键排障：</b>首轮 873/2048 条请求失败，AI 最初怀疑端口与容量问题，
+读取 <code>requests.csv</code> 原始错误后定位为 <code>ulimit -n=1024</code> 导致的
+fd 耗尽（<code>OSError 24</code>），提升到 65535 后 B 组即全成功；又发现 A/C 组
+队列排空时间超过压测端 300s 单请求预算，统一放宽为 900s 后整链重跑，
+五组均 2048/2048 成功。</li>
+<li><b>target1 复现：</b>按挑战二规范实现
+<code>measure_prefix_cache.py</code>（2048 共享前缀 + 64 独立后缀、32 条 × 并发 8、
+固定采样参数、组间 flush_cache），得到共享组命中率 97.06%、Prefill 仅 1,985 token
+的对照组数据。</li>
+<li><b>源码阅读定位：</b>在服务器安装的 SGLang v0.5.14 中逐一核对
+<code>TokenizerManager.generate_request</code>、<code>Scheduler.event_loop_normal</code>、
+<code>RadixCache.match_prefix</code>、<code>cache_finished_req</code> 等关键函数
+所在文件，形成报告第 3 节的流程图与函数-文件表。</li>
+<li><b>报告与数据一致性：</b>report.pdf 中所有数字由脚本直接从
+<code>summary.json / requests.csv</code> 生成，避免转录错误。</li>
+</ul>
+
+<h2>4. 运用 AI 时是否被误导</h2>
+<p>有两处，且都靠回查原始数据纠正：</p>
+<ul>
+<li><b>失败根因的初始误判：</b>AI 先把失败归因于"端口丢失/服务容量不足"，
+但 CSV 中的完整错误串显示 <code>port=8000</code> 且错误类型是
+<code>Too many open files</code>，与端口无关。教训：必须让 AI 引用原始记录而不是
+凭摘要推断。</li>
+<li><b>负载字段语义陷阱：</b>负载文件里的 <code>affinity_backend</code> 是课程方
+按自己的哈希算法标注的"期望后端"，与 Ray Serve <code>ConsistentHashRouter</code>
+的实际哈希环不一致，直接对比会得出"C 组只有 7.3% 请求落在亲和后端"的错误结论；
+改为使用命中率/后端分布等聚合指标后结论才成立。</li>
+</ul>
+<p>除上述两处外，未发现 AI 编造数据或引用不存在的结论；报告中"与作业说明的两处
+偏差"（单卡环境、fd/超时修复）均为 AI 主动如实标注。</p>
+
+</body>
+</html>

@@ -1,0 +1,69 @@
+[2026-09-29 11:21:57] INFO:     127.0.0.1:56056 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:21:57] INFO:     127.0.0.1:56016 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:21:57] INFO:     127.0.0.1:56050 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:21:57] INFO:     127.0.0.1:56026 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:21:57] INFO:     127.0.0.1:56036 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:21:57] INFO:     127.0.0.1:56066 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:21:57] INFO:     127.0.0.1:56082 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:21:57] INFO:     127.0.0.1:56092 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:22:03] Prefill batch, #new-seq: 1, #new-token: 2048, #cached-token: 0, token usage: 0.02, #running-req: 0, #queue-req: 0, #pending-token: 64, cpu graph: False, input throughput (token/s): 195.38
+[2026-09-29 11:22:11] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.05, #running-req: 0, #queue-req: 6, #pending-token: 12800, cpu graph: False, input throughput (token/s): 255.14
+[2026-09-29 11:22:19] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.07, #running-req: 1, #queue-req: 5, #pending-token: 10752, cpu graph: False, input throughput (token/s): 260.85
+[2026-09-29 11:22:26] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.10, #running-req: 2, #queue-req: 4, #pending-token: 8704, cpu graph: False, input throughput (token/s): 277.85
+[2026-09-29 11:22:34] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.12, #running-req: 3, #queue-req: 3, #pending-token: 6656, cpu graph: False, input throughput (token/s): 282.50
+[2026-09-29 11:22:41] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.15, #running-req: 4, #queue-req: 2, #pending-token: 4608, cpu graph: False, input throughput (token/s): 274.75
+[2026-09-29 11:22:49] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.17, #running-req: 5, #queue-req: 1, #pending-token: 2560, cpu graph: False, input throughput (token/s): 274.31
+[2026-09-29 11:22:56] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.20, #running-req: 6, #queue-req: 0, #pending-token: 512, cpu graph: False, input throughput (token/s): 285.18
+[2026-09-29 11:22:59] Prefill batch, #new-seq: 1, #new-token: 512, #cached-token: 0, token usage: 0.21, #running-req: 7, #queue-req: 0, #pending-token: 0, cpu graph: False, input throughput (token/s): 163.44
+[2026-09-29 11:23:14] INFO:     127.0.0.1:52264 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:23:14] INFO:     127.0.0.1:52250 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:23:14] INFO:     127.0.0.1:52224 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:23:14] INFO:     127.0.0.1:52286 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:23:14] INFO:     127.0.0.1:52278 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:23:14] INFO:     127.0.0.1:52292 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:23:14] INFO:     127.0.0.1:52236 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:23:14] INFO:     127.0.0.1:52304 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:23:20] Prefill batch, #new-seq: 1, #new-token: 2048, #cached-token: 0, token usage: 0.02, #running-req: 0, #queue-req: 0, #pending-token: 64, cpu graph: False, input throughput (token/s): 96.00
+[2026-09-29 11:23:28] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.05, #running-req: 0, #queue-req: 6, #pending-token: 12800, cpu graph: False, input throughput (token/s): 271.78
+[2026-09-29 11:23:35] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.07, #running-req: 1, #queue-req: 5, #pending-token: 10752, cpu graph: False, input throughput (token/s): 280.02
+[2026-09-29 11:23:43] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.10, #running-req: 2, #queue-req: 4, #pending-token: 8704, cpu graph: False, input throughput (token/s): 274.01
+[2026-09-29 11:23:50] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.12, #running-req: 3, #queue-req: 3, #pending-token: 6656, cpu graph: False, input throughput (token/s): 264.46
+[2026-09-29 11:23:58] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.15, #running-req: 4, #queue-req: 2, #pending-token: 4608, cpu graph: False, input throughput (token/s): 279.28
+[2026-09-29 11:24:05] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.17, #running-req: 5, #queue-req: 1, #pending-token: 2560, cpu graph: False, input throughput (token/s): 281.34
+[2026-09-29 11:24:12] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.20, #running-req: 6, #queue-req: 0, #pending-token: 512, cpu graph: False, input throughput (token/s): 289.40
+[2026-09-29 11:24:15] Prefill batch, #new-seq: 1, #new-token: 512, #cached-token: 0, token usage: 0.21, #running-req: 7, #queue-req: 0, #pending-token: 0, cpu graph: False, input throughput (token/s): 148.14
+[2026-09-29 11:24:29] INFO:     127.0.0.1:59058 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:24:29] INFO:     127.0.0.1:59042 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:24:29] INFO:     127.0.0.1:59088 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:24:29] INFO:     127.0.0.1:59080 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:24:29] INFO:     127.0.0.1:59074 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:24:29] INFO:     127.0.0.1:59108 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:24:29] INFO:     127.0.0.1:59110 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:24:29] INFO:     127.0.0.1:59104 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:24:35] Prefill batch, #new-seq: 1, #new-token: 2048, #cached-token: 0, token usage: 0.02, #running-req: 0, #queue-req: 0, #pending-token: 64, cpu graph: False, input throughput (token/s): 103.90
+[2026-09-29 11:24:43] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.05, #running-req: 0, #queue-req: 6, #pending-token: 12800, cpu graph: False, input throughput (token/s): 257.58
+[2026-09-29 11:24:51] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.07, #running-req: 1, #queue-req: 5, #pending-token: 10752, cpu graph: False, input throughput (token/s): 258.36
+[2026-09-29 11:24:58] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.10, #running-req: 2, #queue-req: 4, #pending-token: 8704, cpu graph: False, input throughput (token/s): 278.63
+[2026-09-29 11:25:06] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.12, #running-req: 3, #queue-req: 3, #pending-token: 6656, cpu graph: False, input throughput (token/s): 283.79
+[2026-09-29 11:25:13] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.15, #running-req: 4, #queue-req: 2, #pending-token: 4608, cpu graph: False, input throughput (token/s): 280.48
+[2026-09-29 11:25:20] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.17, #running-req: 5, #queue-req: 1, #pending-token: 2560, cpu graph: False, input throughput (token/s): 275.82
+[2026-09-29 11:25:27] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.20, #running-req: 6, #queue-req: 0, #pending-token: 512, cpu graph: False, input throughput (token/s): 288.16
+[2026-09-29 11:25:31] Prefill batch, #new-seq: 1, #new-token: 512, #cached-token: 0, token usage: 0.21, #running-req: 7, #queue-req: 0, #pending-token: 0, cpu graph: False, input throughput (token/s): 167.39
+[2026-09-29 11:25:40] Decode batch, #running-req: 8, #token: 16976, token usage: 0.21, cpu graph: False, gen throughput (token/s): 1.04, #queue-req: 0
+[2026-09-29 11:25:44] INFO:     127.0.0.1:51228 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:25:44] INFO:     127.0.0.1:51254 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:25:44] INFO:     127.0.0.1:51262 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:25:44] INFO:     127.0.0.1:51272 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:25:44] INFO:     127.0.0.1:51244 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:25:44] INFO:     127.0.0.1:51266 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:25:44] INFO:     127.0.0.1:51276 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:25:44] INFO:     127.0.0.1:51282 - "POST /generate HTTP/1.1" 200 OK
+[2026-09-29 11:25:50] Prefill batch, #new-seq: 1, #new-token: 2048, #cached-token: 0, token usage: 0.02, #running-req: 0, #queue-req: 0, #pending-token: 64, cpu graph: False, input throughput (token/s): 104.37
+[2026-09-29 11:25:58] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.05, #running-req: 0, #queue-req: 6, #pending-token: 12800, cpu graph: False, input throughput (token/s): 266.50
+[2026-09-29 11:26:05] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.07, #running-req: 1, #queue-req: 5, #pending-token: 10752, cpu graph: False, input throughput (token/s): 279.93
+[2026-09-29 11:26:13] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.10, #running-req: 2, #queue-req: 4, #pending-token: 8704, cpu graph: False, input throughput (token/s): 273.22
+[2026-09-29 11:26:20] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.12, #running-req: 3, #queue-req: 3, #pending-token: 6656, cpu graph: False, input throughput (token/s): 272.06
+[2026-09-29 11:26:27] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.15, #running-req: 4, #queue-req: 2, #pending-token: 4608, cpu graph: False, input throughput (token/s): 287.56
+[2026-09-29 11:26:34] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.17, #running-req: 5, #queue-req: 1, #pending-token: 2560, cpu graph: False, input throughput (token/s): 289.24
+[2026-09-29 11:26:42] Prefill batch, #new-seq: 2, #new-token: 2048, #cached-token: 0, token usage: 0.20, #running-req: 6, #queue-req: 0, #pending-token: 512, cpu graph: False, input throughput (token/s): 269.97
+[2026-09-29 11:26:45] Prefill batch, #new-seq: 1, #new-token: 512, #cached-token: 0, token usage: 0.21, #running-req: 7, #queue-req: 0, #pending-token: 0, cpu graph: False, input throughput (token/s): 167.32

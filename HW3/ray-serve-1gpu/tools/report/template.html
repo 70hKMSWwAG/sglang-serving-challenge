@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>HW3 报告</title>
+<style>
+@page { size: A4 portrait; margin: 10mm 9mm; }
+html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: "Microsoft YaHei","PingFang SC",sans-serif; font-size: 9.6pt;
+       line-height: 1.5; color: #1a1a1a; margin: 0; }
+h1 { font-size: 15pt; margin: 0 0 2px 0; }
+h2 { font-size: 11.5pt; margin: 10px 0 4px 0; padding: 3px 8px;
+     background: #eef2f7; border-left: 4px solid #4e79a7;
+     page-break-after: avoid; }
+h3 { font-size: 10.2pt; margin: 8px 0 3px 0; page-break-after: avoid; }
+p { margin: 3px 0; orphans: 2; widows: 2; }
+table { border-collapse: collapse; width: 100%; margin: 4px 0; font-size: 8.4pt; }
+th, td { border: 1px solid #b9c4d0; padding: 2.5px 5px; text-align: center; }
+th { background: #eef2f7; }
+td.num { font-variant-numeric: tabular-nums; }
+.small { font-size: 8.2pt; color: #444; }
+code { font-family: Consolas, monospace; font-size: 8.4pt; background: #f4f4f4;
+       padding: 0 3px; }
+.chart { text-align: center; page-break-inside: avoid; }
+.brk { page-break-inside: avoid; }
+.sec { page-break-before: always; }
+.box { background: #f7f9fb; border: 1px solid #d5dee8; border-radius: 4px;
+       padding: 5px 8px; margin: 4px 0; }
+.warn { background: #fdf6ec; border: 1px solid #e8d5b5; }
+.flowtext { font-size: 8.6pt; }
+.tight td, .tight th { padding: 2px 4px; }
+.placeholder { color: #a05a00; }
+</style>
+</head>
+<body>
+
+<h1>比较并改进 Ray Serve 路由 —— 挑战三实验报告</h1>
+<p class="small">HW3-0102603133 ｜ SGLang 0.5.14 · Ray 2.56.0 · Qwen3-0.6B ｜
+单卡 RTX 4090D（4 后端共享）· Ubuntu 22.04 容器</p>
+
+<h2>1. 实验环境与固定负载</h2>
+<p>按课程要求，四组对照均通过<b>同一 Ray Serve HTTP 入口</b>回放官方固定负载
+<code>mooncake_prefix_workload_v2_seed2026.jsonl</code>（SHA-256
+<code>f154ba95…75b03</code> 校验通过：64 前缀族 / 64 预热 / 2048 测量请求，
+计划时长 29.54s，含 steady→burst→recovery 三阶段与一个高频热点族）。
+模型、SGLang 参数（<code>--mem-fraction-static 0.18 --attention-backend triton
+--disable-cuda-graph</code>）、副本拓扑与压测端配置全程不变；每轮由
+<code>run_round.sh</code> 重新部署对应路由配置 → 对四个后端
+<code>POST /flush_cache</code> → 官方 <code>run_workload.py</code> 顺序跑 64 条预热、
+再按到达时间回放 2048 条测量。</p>
+<div class="box small">
+<b>与作业说明的两处偏差（如实说明）：</b>
+① 环境为<b>单张 24GB GPU</b>（未能预约到 4 卡），用 <code>ray.cluster_utils.Cluster</code>
+在同一 GPU 上建 1 head + 4 逻辑 worker，四个 SGLang 后端共享该 GPU；
+四组的负载、模型与后端配置完全一致，组间横向对比成立；但绝对吞吐与延迟数值
+不能与 4 卡环境直接比较。
+② 容器默认 <code>ulimit -n=1024</code>，官方压测端
+（<code>TCPConnector(limit=0)</code>、2048 并发连接）会耗尽 fd，首轮曾出现 873/2048
+条 <code>OSError(24) Too many open files</code>，已统一
+<code>ulimit -n 65535</code> 后重跑；组 A/C 队列排空需 ~360/450s，客户端单请求超时
+统一放宽为 900s（B/D 的最大延迟远低于 300s，不受影响）。五组最终均为
+<b>2048/2048 全部成功</b>。
+</div>
+<div class="chart">@@chart_dist@@</div>
+
+<h2>2. target1：前缀缓存测量（shared vs dispersed）</h2>
+<p>按挑战二规范执行：Radix Cache 开启，原生 <code>/generate</code> 接口发送
+<code>input_ids</code> 并流式接收；每组 32 条测量请求、最大并发 8、
+<code>temperature=0、max_new_tokens=16、ignore_eos=true、sampling_seed=2026</code>。
+共享前缀组先发送 1 条含共享前缀的预热请求（不计入结果）；两组测量前均
+<code>flush_cache</code> 并确认成功。脚本 <code>src/target1/measure_prefix_cache.py</code>。</p>
+<table class="brk tight">
+<tr><th>负载</th><th>成功</th><th>吞吐 (req/s)</th><th>缓存命中率</th>
+<th>实际 Prefill token</th><th>TTFT p50/p95 (ms)</th><th>E2E p50/p95 (ms)</th></tr>
+@@t1_shared@@
+@@t1_dispersed@@
+</table>
+<p><b>结论：</b>共享前缀组命中率达 @@t1_hit_s@@%（理论上限 = 2048/2112 = 97.0%，
+预热请求把首条的后缀也留在了树上），实际执行 Prefill 仅 @@t1_pf_s@@ token，
+是分散组（@@t1_pf_d@@）的 3.4%；TTFT p50 降低约 @@t1_ttft_ratio@@%。
+TPOT 中位数从 @@t1_tpot_s@@ms 升到分散组 @@t1_tpot_d@@ms 的方向相反
+（共享组更低），原因是分散组每条请求都要做 2112 token 的 Prefill，Decode 步骤与
+后续请求的 Prefill 交错排队，拉大了相邻输出 token 的间隔。</p>
+<div class="box small">
+<b>从因果自注意力解释前缀复用：</b>
+Attention(Q,K,V)=softmax(QK<sup>T</sup>/√d<sub>k</sub>)V。因果掩码使第 i 个 token
+只依赖位置 ≤i 的 K/V（K<sub>i</sub>=h<sub>i</sub>W<sub>K</sub>，
+V<sub>i</sub>=h<sub>i</sub>W<sub>V</sub> 只由该 token 自身及其之前的内容决定）。
+因此「相同 token + 相同位置」的前缀，其 K/V 完全相同，可以整体复用；
+Prefill 只需计算前缀之后的新 token（共享组即 64 token 后缀），并在注意时把
+Q<sub>new</sub> 与缓存的前缀 K/V 做 attention。命中后仍需计算的是：
+后缀 token 的 K/V、最后位置的 Q·K<sup>T</sup> 注意力与采样。
+TTFT 因此大幅下降（Prefill 量骤减），而 Decode 阶段每步的计算量与
+Prefill 无关，TPOT 基本不变——两者呈现不同变化。
+</div>
+
+<h2 class="sec">3. 一次 /generate 请求在 SGLang v0.5.14 中的流程</h2>
+<p class="small">流程图与说明合计不超过 2 页；关键函数均已在服务器安装的
+v0.5.14 源码（<code>.../site-packages/sglang/srt/</code>）中逐一核对。</p>
+<div class="chart brk">
+<svg viewBox="0 0 680 470" xmlns="http://www.w3.org/2000/svg"
+     font-family="Microsoft YaHei,sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="3"
+            orient="auto"><path d="M0,0 L7,3 L0,6 z" fill="#456"/></marker>
+  </defs>
+  <style>
+    .nd { fill:#eef2f7; stroke:#7a93ad; rx:5; }
+    .hl { fill:#e8f0e8; stroke:#5a8a5a; }
+    .tx { font-size:11px; fill:#16324f; }
+    .fi { font-size:9px; fill:#6b7b8c; font-family:Consolas,monospace; }
+    .ln { stroke:#456; stroke-width:1.2; fill:none; marker-end:url(#ar); }
+    .lb { font-size:9px; fill:#456; }
+  </style>
+  <rect class="nd" x="8"  y="8"   width="150" height="34" rx="5"/>
+  <text class="tx" x="83" y="22" text-anchor="middle">Client（官方压测端）</text>
+  <text class="fi" x="83" y="36" text-anchor="middle">POST /generate (stream)</text>
+  <line class="ln" x1="158" y1="25" x2="208" y2="25"/>
+  <rect class="nd" x="210" y="8" width="170" height="34" rx="5"/>
+  <text class="tx" x="320" y="22" text-anchor="middle">http_server (FastAPI)</text>
+  <text class="fi" x="320" y="36" text-anchor="middle">entrypoints/http_server.py</text>
+  <line class="ln" x1="320" y1="42" x2="320" y2="62"/>
+  <rect class="nd" x="170" y="64" width="300" height="34" rx="5"/>
+  <text class="tx" x="320" y="78" text-anchor="middle">TokenizerManager.generate_request</text>
+  <text class="fi" x="320" y="92" text-anchor="middle">managers/tokenizer_manager.py：装配 Req → 投递输入 → 挂异步输出队列</text>
+  <line class="ln" x1="320" y1="98" x2="320" y2="118"/>
+  <rect class="nd" x="170" y="120" width="300" height="34" rx="5"/>
+  <text class="tx" x="320" y="134" text-anchor="middle">Scheduler 事件循环 event_loop_normal</text>
+  <text class="fi" x="320" y="148" text-anchor="middle">managers/scheduler.py：recv_requests → self.waiting_queue（等待队列）</text>
+  <line class="ln" x1="320" y1="154" x2="320" y2="174"/>
+  <rect class="nd" x="170" y="176" width="300" height="46" rx="5"/>
+  <text class="tx" x="320" y="191" text-anchor="middle">get_new_batch_prefill → match_prefix_for_req</text>
+  <text class="fi" x="320" y="204" text-anchor="middle">managers/schedule_policy.py：按预算从 waiting_queue 取请求</text>
+  <text class="fi" x="320" y="216" text-anchor="middle">chunked prefill 时先截断，剩余部分稍后继续</text>
+  <line class="ln" x1="320" y1="222" x2="320" y2="242"/>
+  <rect class="hl" x="170" y="244" width="300" height="46" rx="5"/>
+  <text class="tx" x="320" y="259" text-anchor="middle" fill="#2a5a2a">RadixCache.match_prefix（前缀匹配）</text>
+  <text class="fi" x="320" y="272" text-anchor="middle">mem_cache/radix_cache.py：radix 树上找最长可复用前缀</text>
+  <text class="fi" x="320" y="284" text-anchor="middle">命中 → last_node/匹配 token 数 → 该部分 K/V 直接复用</text>
+  <line class="ln" x1="470" y1="267" x2="530" y2="267"/>
+  <text class="lb" x="537" y="255">只对未命中</text>
+  <text class="lb" x="537" y="267">的新 token</text>
+  <text class="lb" x="537" y="279">做 Prefill</text>
+  <line class="ln" x1="320" y1="290" x2="320" y2="310"/>
+  <rect class="nd" x="170" y="312" width="300" height="46" rx="5"/>
+  <text class="tx" x="320" y="327" text-anchor="middle">PrefillAdder 构造 ScheduleBatch → prepare</text>
+  <text class="fi" x="320" y="340" text-anchor="middle">schedule_policy.py / managers/schedule_batch.py</text>
+  <text class="fi" x="320" y="352" text-anchor="middle">rem_total_tokens 扣除可复用部分，控制 token/req 预算</text>
+  <line class="ln" x1="320" y1="358" x2="320" y2="378"/>
+  <rect class="nd" x="170" y="380" width="300" height="46" rx="5"/>
+  <text class="tx" x="320" y="395" text-anchor="middle">TpModelWorker.forward_batch_generation</text>
+  <text class="fi" x="320" y="408" text-anchor="middle">managers/tp_worker.py：Prefill 一步 → 循环 Decode（每步 1 token）</text>
+  <text class="fi" x="320" y="420" text-anchor="middle">ModelRunner.forward → 注意力直接读命中的前缀 K/V 页</text>
+  <line class="ln" x1="120" y1="403" x2="78" y2="403"/>
+  <line class="ln" x1="78" y1="403" x2="78" y2="344"/>
+  <rect class="hl" x="8" y="296" width="140" height="46" rx="5"/>
+  <text class="tx" x="78" y="311" text-anchor="middle" fill="#2a5a2a">KV 写回缓存</text>
+  <text class="fi" x="78" y="324" text-anchor="middle">cache_unfinished_req（chunked）</text>
+  <text class="fi" x="78" y="336" text-anchor="middle">cache_finished_req</text>
+  <line class="ln" x1="320" y1="426" x2="320" y2="442"/>
+  <rect class="nd" x="170" y="444" width="300" height="22" rx="5"/>
+  <text class="fi" x="320" y="459" text-anchor="middle">Detokenizer → TokenizerManager 按流式块写回异步队列 → SSE 逐块返回 Client（meta_info.cached_tokens 随首块给出）</text>
+</svg>
+</div>
+<p class="flowtext"><b>请求如何进入等待队列：</b>HTTP 层收到 <code>/generate</code> 后交给
+<code>TokenizerManager.generate_request</code>，它构造 <code>Req</code> 并经
+<code>scheduler</code> 的输入流异步发给 Scheduler 进程；
+<code>event_loop_normal</code> 每轮 <code>recv_requests</code> 后将新请求
+append 进 <code>self.waiting_queue</code>，等待每轮调度。</p>
+<p class="flowtext"><b>前缀匹配如何减少本轮 Prefill token：</b>
+<code>get_new_batch_prefill</code> 对每个候选请求调用
+<code>match_prefix_for_req → RadixCache.match_prefix</code>，在 radix 树上找最长匹配；
+匹配到的 token 不再进入 Prefill 批次（<code>PrefillAdder</code> 按
+<code>rem_total_tokens</code> 扣除后只排新 token），于是
+<code>prompt_len − matched_len</code> 才是实际 Prefill 量。</p>
+<p class="flowtext"><b>新产生的 KV 如何写回缓存：</b>chunked prefill 的中间态由
+<code>cache_unfinished_req</code> 把已计算部分插入 radix 树；请求完成后由
+<code>cache_finished_req</code> 将完整序列的 KV 页接入树中供后续请求复用，
+并在显存紧张时按 LRU 淘汰。</p>
+<p class="flowtext"><b>生成结果如何流式返回：</b>每个 Decode 步产出一个 token，
+经 Detokenizer 解码后发回 TokenizerManager；<code>generate_request</code> 的异步
+生成器把增量文本以 SSE <code>data:</code> 块写回 HTTP 连接，末块携带
+<code>meta_info</code>（含 <code>cached_tokens</code>），客户端据此统计命中率。</p>
+<table class="brk tight">
+<tr><th>环节</th><th>关键函数 / 类</th><th>文件（sglang/srt/ 下）</th></tr>
+<tr><td>HTTP 接收</td><td><code>/generate</code> 路由</td><td>entrypoints/http_server.py</td></tr>
+<tr><td>装配与流式回调</td><td><code>TokenizerManager.generate_request</code></td><td>managers/tokenizer_manager.py</td></tr>
+<tr><td>事件循环 / 等待队列</td><td><code>Scheduler.event_loop_normal</code>、<code>waiting_queue</code></td><td>managers/scheduler.py</td></tr>
+<tr><td>Prefill 调度</td><td><code>get_new_batch_prefill</code>、<code>PrefillAdder</code></td><td>managers/scheduler.py、managers/schedule_policy.py</td></tr>
+<tr><td>前缀匹配</td><td><code>match_prefix_for_req</code>、<code>RadixCache.match_prefix</code></td><td>managers/schedule_policy.py、mem_cache/radix_cache.py</td></tr>
+<tr><td>批次结构</td><td><code>ScheduleBatch / ModelWorkerBatch</code></td><td>managers/schedule_batch.py</td></tr>
+<tr><td>执行 Prefill/Decode</td><td><code>TpModelWorker.forward_batch_generation</code></td><td>managers/tp_worker.py</td></tr>
+<tr><td>KV 写回</td><td><code>cache_finished_req / cache_unfinished_req</code></td><td>mem_cache/radix_cache.py</td></tr>
+<tr><td>流式输出</td><td>Detokenizer → TokenizerManager 流式队列</td><td>managers/detokenizer_manager.py、tokenizer_manager.py</td></tr>
+</table>
+
+<h2 class="sec">4. target3：四组路由对照</h2>
+<div class="chart brk">
+<svg viewBox="0 0 680 132" xmlns="http://www.w3.org/2000/svg"
+     font-family="Microsoft YaHei,sans-serif">
+  <style>
+    .b { fill:#eef2f7; stroke:#7a93ad; }
+    .t { font-size:10.5px; fill:#16324f; }
+    .f { font-size:8.5px; fill:#6b7b8c; font-family:Consolas,monospace; }
+    .l { stroke:#456; stroke-width:1.1; fill:none; marker-end:url(#ar); }
+  </style>
+  <rect class="b" x="6" y="20" width="86" height="30" rx="4"/>
+  <text class="t" x="49" y="38" text-anchor="middle">Client</text>
+  <line class="l" x1="92" y1="35" x2="126" y2="35"/>
+  <rect class="b" x="128" y="14" width="128" height="42" rx="4"/>
+  <text class="t" x="192" y="31" text-anchor="middle">Ray Serve HTTP :8000</text>
+  <text class="f" x="192" y="46" text-anchor="middle">RequestRouter（A/B/C/D 可换）</text>
+  <rect class="b" x="128" y="78" width="128" height="40" rx="4"/>
+  <text class="f" x="192" y="94" text-anchor="middle">A/B：PowerOfTwoChoices</text>
+  <text class="f" x="192" y="108" text-anchor="middle">C：ConsistentHash D：本文改进</text>
+  <line class="l" x1="192" y1="56" x2="192" y2="78"/>
+  <line class="l" x1="256" y1="35" x2="300" y2="35"/>
+  <g>
+    <rect class="b" x="302" y="8" width="112" height="26" rx="4"/>
+    <text class="f" x="358" y="25" text-anchor="middle">Replica i (worker i)</text>
+    <rect class="b" x="302" y="38" width="112" height="26" rx="4"/>
+    <text class="f" x="358" y="55" text-anchor="middle">Replica i+1 (worker i+1)</text>
+    <rect class="b" x="302" y="68" width="112" height="26" rx="4"/>
+    <text class="f" x="358" y="85" text-anchor="middle">Replica i+2 (worker i+2)</text>
+    <rect class="b" x="302" y="98" width="112" height="26" rx="4"/>
+    <text class="f" x="358" y="115" text-anchor="middle">Replica i+3 (worker i+3)</text>
+  </g>
+  <line class="l" x1="414" y1="21" x2="452" y2="21"/>
+  <line class="l" x1="414" y1="51" x2="452" y2="51"/>
+  <line class="l" x1="414" y1="81" x2="452" y2="81"/>
+  <line class="l" x1="414" y1="111" x2="452" y2="111"/>
+  <g>
+    <rect class="b" x="454" y="8" width="120" height="26" rx="4"/>
+    <text class="f" x="514" y="25" text-anchor="middle">SGLang 0 :30000</text>
+    <rect class="b" x="454" y="38" width="120" height="26" rx="4"/>
+    <text class="f" x="514" y="55" text-anchor="middle">SGLang 1 :30001</text>
+    <rect class="b" x="454" y="68" width="120" height="26" rx="4"/>
+    <text class="f" x="514" y="85" text-anchor="middle">SGLang 2 :30002</text>
+    <rect class="b" x="454" y="98" width="120" height="26" rx="4"/>
+    <text class="f" x="514" y="115" text-anchor="middle">SGLang 3 :30003</text>
+  </g>
+  <text class="f" x="580" y="45">Replica 固定在不同的</text>
+  <text class="f" x="580" y="58">worker（placement</text>
+  <text class="f" x="580" y="71">bundle），并固定转</text>
+  <text class="f" x="580" y="84">发一个 SGLang 后端</text>
+</svg>
+</div>
+
+<h3>4.1 主表（每组 2048 条测量请求，全部成功）</h3>
+<table class="brk tight">
+<tr><th>组</th><th>路由</th><th>max_ongoing</th><th>成功率</th><th>吞吐 (req/s)</th>
+<th>缓存命中率</th><th>实际 Prefill</th><th>TTFT p95 (s)</th><th>E2E p95 (s)</th>
+<th>后端分布 0/1/2/3</th></tr>
+@@main_table@@
+</table>
+<p class="small">负载计划 29.54s 内发完全部请求（≈69 req/s），远超单卡 4 后端的服务能力，
+因此各组都在过饱和状态下排队；这放大了组间差异，也使「负载过高时路由策略如何行为」
+成为可观察对象。因此主表中的 p95 应读作过饱和状态下的队列排空时间，不代表
+服务的尾延迟能力：组 A 的 E2E p95 315.9s 中，TTFT p95 已占 312.3s，首字之后的
+实际生成只有 3.6s；组 C 对应为 390.7s、386.8s 与 4.0s。这组数字是单卡 4 后端
+过饱和的结果，不宜与其他 4 卡环境的队伍横向比较。
+下图为吞吐与命中率对照：</p>
+<div class="chart brk">@@chart_thr@@</div>
+
+<h3>4.2 组 B：max_ongoing_requests 的两个候选</h3>
+<p>16 → 64 同时改善吞吐（13.04 → 17.13 req/s）与延迟（TTFT p95 113.8s → 69.8s），
+故 <b>B_PICK = 64</b>。解释：本环境请求在 Serve 代理排队而非后端排队时,
+GPU 利用率不足；放宽 <code>max_ongoing_requests</code> 让每个 SGLang 后端能组出更大的
+Prefill/Decode batch，摊薄了单请求开销。默认值 A（=5）过小：4 副本同时至多 20 条
+在后端，361s 才排空队列，吞吐仅 5.67 req/s。</p>
+
+<h3>4.3 组 C：前缀亲和的收益与热点</h3>
+<p>一致性哈希把同一 <code>X-Session-Id</code>（= 前缀族）恒定路由到同一副本：
+缓存命中率升至 @@hit_c@@%（B2 为 @@hit_b2@@%），实际 Prefill token 从 @@pf_b2@@k 降到
+@@pf_c@@k（−37%），验证了「前缀亲和 → 缓存收益」。但代价同样显著：高频热点族
+（768 条 superhot 请求）被钉在单一后端，该后端收到 @@c_share@@% 的请求
+（1185/2048），吞吐崩至 @@thr_c@@ req/s、TTFT p95 达 386.8s。
+热点族的 TTFT p50 = 208s，而 cold 族仅 5.7s——亲和把缓存收益变成了排队代价。</p>
+<table class="brk tight">
+@@tier_table@@
+</table>
+<p class="small">按前缀族热度分层（B2/C/D）：C 让 cold/warm/hot 层全面受益（命中率
++25~34pt、TTFT 大幅下降），但 superhot 层 TTFT p50 从 33.6s 恶化到 208.0s。</p>
+
+<h3>4.4 组 D：亲和 + 负载感知回退</h3>
+<p><code>AffinityLoadAwareRouter</code>（<code>src/target3/routers.py</code>，继承
+<code>ConsistentHashRouter</code>）只用两类信号：<b>当前请求</b>的
+<code>X-Session-Id</code>（一致性哈希给出亲和副本）与<b>当前服务状态</b>（经
+<code>_probe_queue_lens</code> 实时探测的各副本排队长度，与 p2c 同一机制）。
+规则：亲和副本的在队长度 ≥ 75%×max_ongoing（默认）时，改排当前最空闲副本，并把
+每次回退写入 <code>router_fallbacks.jsonl</code>。不读任何未来请求。</p>
+<p><b>效果：</b>命中率 @@hit_d@@%、Prefill @@pf_d@@k token，在 B2 与 C 之间保住了约
+一半的缓存收益；吞吐 @@thr_d@@ req/s、TTFT p95 74.4s，基本恢复到 B2 水平
+（17.13 / 69.8s），最热后端的请求占比（四个后端中承载请求数最多者的
+计数 ÷ 2048，与 4.1 主表同口径）从 @@hot_c@@% 降到 @@hot_d@@%。
+本轮共记录 @@fb_n@@ 次回退决策、覆盖 @@fb_sessions@@/64 个前缀族——决策数远大于请求数，
+是因为过饱和下同一请求在被亲和副本拒绝排队期间会被路由器反复重估；
+superhot 族（768 条）占回退的三分之一以上。</p>
+<p><b>代价：</b>① 每次路由决策多一次队列长度探测（缓存未命中时为 RPC），路由层
+开销增加；② 回退破坏部分亲和，命中率（60.8%）明显低于 C（73.4%）；③ 与 B2 相比
+吞吐 −8.3%、E2E p95 +6.3%——在本环境（后端总容量 < 到达率）下，p2c 的
+"选两个比负载"已能避开热点，D 的边际收益主要体现在<b>省 Prefill</b>（1266k vs
+1368k token，−7.4%）与更高的命中率上；若后端 KV 池更紧张或热点更多，该收益会被放大。</p>
+
+<h3>4.5 分阶段行为与压测端健康检查</h3>
+<table class="brk tight">
+@@phase_table_abd@@
+</table>
+<p class="small">steady 阶段（前 512 条）TTFT 仅数秒：缓存已被预热填好；burst 阶段
+1024 条集中到达，把队列推深，TTFT 跳升一个量级；recovery 阶段到达率下降，
+命中率与 TTFT 逐步回落。client_queue p95（@@cq@@）与 dispatch_lag p95（@@dl@@）
+均在毫秒级，压测端不是瓶颈，瓶颈在路由与后端。</p>
+
+<h2 class="sec">5. 结论与复现</h2>
+<p>① 前缀缓存的收益可以被路由策略"兑现"或"浪费"：C 组证明了亲和的最大缓存收益
+（−37% Prefill），也暴露了其热点代价；② 负载感知回退（D）用少量命中率换回了吞吐与
+尾部延迟，是工程上更稳的折中；③ <code>max_ongoing_requests</code> 是单卡多后端场景
+下最敏感的旋钮（A→B2 吞吐 3 倍）。</p>
+<p class="small">复现：<code>cd src/target3 && NUM_GPUS=1 bash launch_sglang.sh
+&& for g in A_default B_cand1 B_cand2 C_affinity D_improved; do
+bash run_round.sh $g; done</code>（<code>B_PICK=64 TIMEOUT_S=900</code> 已固化为
+脚本默认/说明）；target1：<code>python src/target1/measure_prefix_cache.py
+--base-url http://127.0.0.1:30000 --output-dir results/target1</code>。
+结果目录与报告表格对应关系见 README.md 第 6 节。</p>
+
+<h2>6. 作业感受</h2>
+<p><b>（1）如何完成本次挑战：</b>按"环境→数据→分析"的顺序推进：先在租用的 GPU
+容器里装好 sglang-env / ray-env 双环境并下载 Qwen3-0.6B；再写
+<code>serve_app.py</code>（Cluster 逻辑节点 + placement group 固定副本到 worker）
+与 <code>run_round.sh</code>（每轮重部署→flush→官方压测→校验）；AI 全程协助搭建、
+排障与写作，关键排障均以数据为准（如发现 873 条失败的根因是 fd 上限而非服务能力，
+用 <code>/proc/&lt;pid&gt;/limits</code> 验证后修复重跑；A/C 组超时由 300s 客户端
+预算导致，通过队列排空时间推算后统一放宽并整链重跑）。</p>
+<div class="box small">
+<p><b>（2）最困难的部分：</b>最折腾的是排查压测失败。第一轮 A 组 873 条请求直接
+连不上，一开始以为是四个后端扛不住 69 req/s，或者端口哪里配错了，翻了半天日志
+没结论，最后是在 <code>requests.csv</code> 的 error 列里看到完整报错——
+<code>Too many open files</code>：是压测端自己把文件描述符用光了（容器默认
+<code>ulimit -n 1024</code>，官方压测脚本开 2048 个连接且不设上限）。改完这个，
+A 和 C 又各有上百条超时，这次算了下队列排空时间才发现是压测端 300 秒的单请求
+预算不够用，服务本身没问题。这两次都差点把方向带偏，后来养成一个习惯：
+每个结论都回到原始 CSV/JSON 里对一遍数字再下，不在汇总指标上想当然。</p>
+<p><b>（3）对今后科研工作的启发：</b>这次算是完整走了一遍"现象 → 数据 → 根因 →
+可复现"的流程，回头看，从 0 到 1 的工作至少要包含这么几块：先把环境搭到能稳定
+复现并把每轮实验脚本化，不然五组对照根本保证不了同口径；其次是测量本身要当成
+实验对象来对待——这次压测端 fd 和超时这两个"客户端配置"就伪装成了"服务端不行"；
+再次是如实记录偏差，单卡替代四卡、超时放宽这些写进 README 比藏着好，审的人自己
+会判断。对我之后的科研，最大的启发是：实验框架的可靠性本身就是工作量，而且应该
+是最先做的那一部分，否则后面所有结论都悬着。</p>
+</div>
+
+</body>
+</html>
