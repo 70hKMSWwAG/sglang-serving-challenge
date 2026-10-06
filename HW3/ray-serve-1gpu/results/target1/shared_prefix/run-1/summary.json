@@ -1,0 +1,35 @@
+{
+  "group": "shared_prefix",
+  "requests": 32,
+  "max_concurrency": 8,
+  "successful": 32,
+  "failed": 0,
+  "elapsed_s": 1.9119,
+  "throughput_rps": 16.7373,
+  "prompt_tokens_total": 67584,
+  "cached_tokens_total": 65599,
+  "cache_hit_rate": 0.970629,
+  "computed_prefill_tokens_total": 1985,
+  "ttft_s": {
+    "p50": 0.09577,
+    "p95": 0.106705
+  },
+  "tpot_s": {
+    "p50": 0.024737,
+    "p95": 0.026351
+  },
+  "latency_s": {
+    "p50": 0.471042,
+    "p95": 0.4894
+  },
+  "config": {
+    "input_len": 2112,
+    "shared_prefix_len": 2048,
+    "suffix_len": 64,
+    "max_new_tokens": 16,
+    "temperature": 0.0,
+    "ignore_eos": true,
+    "sampling_seed": 2026,
+    "token_seed": 2026
+  }
+}

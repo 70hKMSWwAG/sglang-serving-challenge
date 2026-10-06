@@ -1,0 +1,284 @@
+{
+  "schema_version": 2,
+  "run_name": "A_default_run1",
+  "policy": "serve",
+  "router_name": "p2c",
+  "max_ongoing_requests": 5,
+  "model": "Qwen/Qwen3-0.6B",
+  "workload_sha256": "f154ba954e28ca9612257edf5deb0d5dfc6bf27fd0115a701e1f49e52df75b03",
+  "max_in_flight": 2048,
+  "token_base": 4096,
+  "token_span": 60000,
+  "token_salt": 2026,
+  "expected_replicas": 4,
+  "expected_backends": 4,
+  "expected_nodes": 4,
+  "requests": 2048,
+  "successful": 2048,
+  "failed": 0,
+  "incomplete": 0,
+  "warmup_successful": 64,
+  "warmup_failed": 0,
+  "warmup_incomplete": 0,
+  "validation_errors": [],
+  "elapsed_s": 361.2002942562103,
+  "planned_duration_s": 29.538768,
+  "offered_rate_rps": 69.29876019202968,
+  "throughput_rps": 5.669984306677478,
+  "prompt_tokens_total": 3233280,
+  "cached_tokens_total": 1739392,
+  "computed_prefill_tokens_total": 1493888,
+  "cache_hit_rate": 0.5379651623119557,
+  "ttft_s": {
+    "mean": 161.30599940379034,
+    "p50": 161.56327213346958,
+    "p95": 312.290864918381,
+    "p99": 325.22825380414724
+  },
+  "tpot_s": {
+    "mean": 0.025693479398880722,
+    "p50": 0.0256092207506299,
+    "p95": 0.027090187536345588,
+    "p99": 0.028601862671898633
+  },
+  "latency_s": {
+    "mean": 164.6501350129438,
+    "p50": 164.19919177144766,
+    "p95": 315.8830029666424,
+    "p99": 327.71862418204546
+  },
+  "dispatch_lag_s": {
+    "mean": 0.002003431554768128,
+    "p50": 0.0010634062318803927,
+    "p95": 0.0032481973674300946,
+    "p99": 0.01833806394505544
+  },
+  "client_queue_s": {
+    "mean": 0.0004032641681988025,
+    "p50": 0.0003885142505168915,
+    "p95": 0.0005800500512123108,
+    "p99": 0.0009863674640655518
+  },
+  "replica_distribution": {
+    "3ebjjekd": 492,
+    "9nc5tfc9": 528,
+    "bhg1k6c5": 516,
+    "m5jbunrh": 512
+  },
+  "node_distribution": {
+    "8c10fbd2e49adbb2eb43224a63533e4cd437b2ee720fa422f6e36393": 512,
+    "8f8afbeb6b902d4765222d3fa659a26c7d2405e3ed9d5c6a9a525b82": 528,
+    "daa66e0325d90764b3ed70ad9464bc7deb7d9e9ac25aa225a7a6e729": 516,
+    "ed8afc05096a925b64c6a3f053c56ed723bb129db5eddacc8392b6d5": 492
+  },
+  "backend_distribution": {
+    "0": 512,
+    "1": 528,
+    "2": 516,
+    "3": 492
+  },
+  "backend_token_distribution": {
+    "0": {
+      "requests": 512,
+      "input_tokens": 808960,
+      "cached_tokens": 521344,
+      "requested_output_tokens": 68533,
+      "output_tokens": 68533
+    },
+    "1": {
+      "requests": 528,
+      "input_tokens": 833536,
+      "cached_tokens": 462976,
+      "requested_output_tokens": 67557,
+      "output_tokens": 67557
+    },
+    "2": {
+      "requests": 516,
+      "input_tokens": 814080,
+      "cached_tokens": 403840,
+      "requested_output_tokens": 67612,
+      "output_tokens": 67612
+    },
+    "3": {
+      "requests": 492,
+      "input_tokens": 776704,
+      "cached_tokens": 351232,
+      "requested_output_tokens": 65129,
+      "output_tokens": 65129
+    }
+  },
+  "warmup_replica_distribution": {
+    "bhg1k6c5": 64
+  },
+  "warmup_node_distribution": {
+    "daa66e0325d90764b3ed70ad9464bc7deb7d9e9ac25aa225a7a6e729": 64
+  },
+  "warmup_backend_distribution": {
+    "2": 64
+  },
+  "traffic_phases": {
+    "steady": {
+      "requests": 512,
+      "successful": 512,
+      "cache_hit_rate": 0.5012634238787113,
+      "ttft_s": {
+        "mean": 38.71675961206347,
+        "p50": 36.96210106834769,
+        "p95": 87.36919974908233,
+        "p99": 93.24972887337208
+      },
+      "latency_s": {
+        "mean": 42.064656039190595,
+        "p50": 40.26231862977147,
+        "p95": 90.7410486228764,
+        "p99": 97.06067612022161
+      },
+      "backend_distribution": {
+        "0": 116,
+        "1": 136,
+        "2": 129,
+        "3": 131
+      }
+    },
+    "burst": {
+      "requests": 1024,
+      "successful": 1024,
+      "cache_hit_rate": 0.5595908333994132,
+      "ttft_s": {
+        "mean": 161.93449365561537,
+        "p50": 161.56327213346958,
+        "p95": 245.42289531603456,
+        "p99": 289.52813374996185
+      },
+      "latency_s": {
+        "mean": 165.25805283955197,
+        "p50": 164.19919177144766,
+        "p95": 249.20521961525083,
+        "p99": 294.4767210148275
+      },
+      "backend_distribution": {
+        "0": 261,
+        "1": 264,
+        "2": 263,
+        "3": 236
+      }
+    },
+    "recovery": {
+      "requests": 512,
+      "successful": 512,
+      "cache_hit_rate": 0.5315814468893462,
+      "ttft_s": {
+        "mean": 282.63825069186714,
+        "p50": 281.5185392610729,
+        "p95": 323.2974589243531,
+        "p99": 326.9018072001636
+      },
+      "latency_s": {
+        "mean": 286.01977833348064,
+        "p50": 285.7418486215174,
+        "p95": 327.1357576325536,
+        "p99": 330.0837870799005
+      },
+      "backend_distribution": {
+        "0": 135,
+        "1": 128,
+        "2": 124,
+        "3": 125
+      }
+    }
+  },
+  "popularity_tiers": {
+    "warm": {
+      "requests": 480,
+      "successful": 480,
+      "cache_hit_rate": 0.19224936815501265,
+      "ttft_s": {
+        "mean": 155.09598129847242,
+        "p50": 154.03068351373076,
+        "p95": 307.45720115303993,
+        "p99": 323.1792634315789
+      },
+      "latency_s": {
+        "mean": 157.17370096175,
+        "p50": 155.2528089620173,
+        "p95": 309.23031091690063,
+        "p99": 325.27037785202265
+      },
+      "backend_distribution": {
+        "0": 118,
+        "1": 135,
+        "2": 123,
+        "3": 104
+      }
+    },
+    "hot": {
+      "requests": 560,
+      "successful": 560,
+      "cache_hit_rate": 0.441374269005848,
+      "ttft_s": {
+        "mean": 164.69271993847963,
+        "p50": 167.74177956953645,
+        "p95": 311.7611775174737,
+        "p99": 325.24850069731474
+      },
+      "latency_s": {
+        "mean": 167.30763986097384,
+        "p50": 170.1293467655778,
+        "p95": 314.2612027488649,
+        "p99": 327.24454452842474
+      },
+      "backend_distribution": {
+        "0": 131,
+        "1": 143,
+        "2": 138,
+        "3": 148
+      }
+    },
+    "superhot": {
+      "requests": 768,
+      "successful": 768,
+      "cache_hit_rate": 0.9380208333333333,
+      "ttft_s": {
+        "mean": 160.49448100520144,
+        "p50": 158.96836008504033,
+        "p95": 312.65640418976545,
+        "p99": 323.2182377502322
+      },
+      "latency_s": {
+        "mean": 165.33848703786498,
+        "p50": 163.82721582055092,
+        "p95": 317.7832236215472,
+        "p99": 328.14721881225705
+      },
+      "backend_distribution": {
+        "0": 207,
+        "1": 187,
+        "2": 186,
+        "3": 188
+      }
+    },
+    "cold": {
+      "requests": 240,
+      "successful": 240,
+      "cache_hit_rate": 0.14696707105719237,
+      "ttft_s": {
+        "mean": 168.42054657563568,
+        "p50": 165.31960916146636,
+        "p95": 313.9988677352667,
+        "p99": 326.27000891044736
+      },
+      "latency_s": {
+        "mean": 171.19943199018016,
+        "p50": 167.80367045104504,
+        "p95": 318.2094463557005,
+        "p99": 327.74410761520267
+      },
+      "backend_distribution": {
+        "0": 56,
+        "1": 63,
+        "2": 69,
+        "3": 52
+      }
+    }
+  }
+}

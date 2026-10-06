@@ -1,0 +1,2 @@
+prompt_tokens,input_tokens,cached_tokens,output_tokens,text_chunks,status_code,error,ttft_s,tpot_s,latency_s,finish_reason,group,request_id
+2112,2112,0,16,16,200,,0.087171,0.023741,0.443282,length,shared_prefix,warmup-0
