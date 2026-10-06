@@ -1,42 +1,62 @@
 # -*- coding: utf-8 -*-
-"""重建两份交付 zip（UTF-8 文件名，跨平台）。
+"""重建两份作业交付 zip（UTF-8 文件名，跨平台）。
 
-原仓库曾直接提交 HW2-0102603133.zip / HW3-0102603133.zip，其内容与对应
-解包目录逐字节一致，为避免双份维护已从 git 移除；需要交付包时运行：
+第三关要求（任务书「交付格式」）：在 github 上传 HW3-姓名（或学号）.zip，
+**解压后仅包含同名根目录**，其内为 README.md / report.pdf / AI 使用说明情况.pdf /
+src/ / results/。本脚本据此生成：
 
-    python scripts/build_deliverable_zips.py
+    HW3-0102603133.zip
+    └── HW3-0102603133/
+        ├── README.md
+        ├── report.pdf
+        ├── AI 使用说明情况（第三次挑战）.pdf
+        ├── 作业感受（第三次挑战）.pdf
+        ├── src/{target1,target3}/
+        └── results/{target1,target3}/
 
-输出：
-    dist/HW2-0102603133.zip   <- HW2/env-wsl/ 全部内容（平铺，与历史交付结构一致）
-    dist/HW3-0102603133.zip   <- HW3/ray-serve-4gpu/ 全部内容（平铺）
+运行：
+    python scripts/build_deliverable_zips.py            # 生成 HW3 交付包
+    python scripts/build_deliverable_zips.py --all      # 同时生成 HW2 包
 """
+import argparse
 import os
 import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "dist")
 
+# (输出 zip 名, 源目录, zip 内顶层目录名)
 JOBS = [
-    ("HW2-0102603133.zip", os.path.join(ROOT, "HW2", "env-wsl")),
-    ("HW3-0102603133.zip", os.path.join(ROOT, "HW3", "ray-serve-4gpu")),
+    ("HW3-0102603133.zip", os.path.join(ROOT, "HW3", "ray-serve-4gpu"), "HW3-0102603133"),
+]
+EXTRA_JOBS = [
+    ("HW2-0102603133.zip", os.path.join(ROOT, "HW2", "env-wsl"), ""),
 ]
 
+SKIP_DIRS = {"__pycache__", ".ipynb_checkpoints", ".git"}
+SKIP_SUFFIX = {".pyc", ".pyo"}
 
-def build(zip_name: str, src_dir: str) -> None:
-    os.makedirs(OUT, exist_ok=True)
-    dst = os.path.join(OUT, zip_name)
+
+def build(zip_name: str, src_dir: str, top_dir: str) -> None:
+    dst = os.path.join(ROOT, zip_name)
     n = 0
-    with zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED) as zf:
+    with zipfile.ZipFile(dst, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         for dirpath, dirnames, filenames in os.walk(src_dir):
-            dirnames.sort()
+            dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
             for fn in sorted(filenames):
+                if any(fn.endswith(s) for s in SKIP_SUFFIX):
+                    continue
                 full = os.path.join(dirpath, fn)
-                rel = os.path.relpath(full, src_dir)
-                zf.write(full, rel)  # 平铺结构，与历史交付一致
+                rel = os.path.relpath(full, src_dir).replace("\\", "/")
+                arc = f"{top_dir}/{rel}" if top_dir else rel
+                zf.write(full, arc)
                 n += 1
-    print(f"{zip_name}: {n} files -> {dst}")
+    print(f"{zip_name}: {n} files, {os.path.getsize(dst)/1024/1024:.2f} MB")
 
 
 if __name__ == "__main__":
-    for name, src in JOBS:
-        build(name, src)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--all", action="store_true", help="同时生成 HW2 交付包")
+    args = ap.parse_args()
+    jobs = JOBS + (EXTRA_JOBS if args.all else [])
+    for zip_name, src, top in jobs:
+        build(zip_name, src, top)

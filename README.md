@@ -12,11 +12,12 @@
 |---|---|---|
 | HW1 | [`HW1/deliverables/`](HW1/deliverables/) | 6 份 PDF；逐请求结果见 [`HW1/results/`](HW1/results/) |
 | HW2 | [`HW2/env-wsl/`](HW2/env-wsl/) | 真机 WSL2 版，数据最完整（run-1/run-2 换序复测），report.pdf 8 页 |
-| HW3 | [`HW3/ray-serve-1gpu/`](HW3/ray-serve-1gpu/) | 单卡 4090D 版（原独立仓库 HW3-0102603133，含完整 Ray Serve 脚本与逐轮结果） |
+| HW3 | [`HW3/ray-serve-4gpu/`](HW3/ray-serve-4gpu/) | 4 × 4090D（AutoDL）版，符合任务书「四张 GPU」要求；report.pdf + 作业感受 PDF + AI 使用说明 PDF 齐备 |
 
-> 交付 zip 不再入库：任务书要求提交的 `HW2-0102603133.zip` / `HW3-0102603133.zip`
-> 内容曾与对应目录逐字节相同，为避免双份维护已移除；需要时运行
-> `python scripts/build_deliverable_zips.py` 即可从当前目录重建（UTF-8 文件名，无乱码）。
+> **第三关交付包**：根目录 [`HW3-0102603133.zip`](HW3-0102603133.zip)，解压后仅含同名
+> 根目录（`README.md` / `report.pdf` / `AI 使用说明情况（第三次挑战）.pdf` /
+> 作业感受 PDF / `src/{target1,target3}` / `results/{target1,target3}`），符合任务书交付格式。
+> 需要重新打包时运行 `python scripts/build_deliverable_zips.py`；加 `--all` 可一并生成 HW2 包。
 
 ## 🗂 目录总览
 
@@ -59,11 +60,16 @@ TTFT 显著下降、TPOT 基本不变。
 
 ## HW3 两个版本
 
-| | [`HW3/ray-serve-1gpu/`](HW3/ray-serve-1gpu/) | [`HW3/ray-serve-4gpu/`](HW3/ray-serve-4gpu/) |
+| | [`HW3/ray-serve-4gpu/`](HW3/ray-serve-4gpu/) **← 交付版** | [`HW3/ray-serve-1gpu/`](HW3/ray-serve-1gpu/) |
 |---|---|---|
-| 硬件 | 1 × RTX 4090D（SeetaCloud 容器） | 4 × RTX 4090D（AutoDL 北京 B2 区） |
-| 拓扑 | 单卡四后端，Ray Serve 代理 :8000 | 4 副本各占一卡，逐 worker 隔离 |
-| 轮次 | A / B1 / B2 / C / D 多轮（`run_all_rounds.sh`） | A / B1 / B2 / C / D 五轮 |
-| 特色 | 完整部署脚本 + `router_fallbacks.jsonl` 逐请求路由日志 | `ray_cluster.py` 显式建簇 + 作业感受/AI 使用说明 PDF |
+| 硬件 | 4 × RTX 4090D（AutoDL 北京 B2 区），符合任务书「每人四张 GPU」 | 1 × RTX 4090D（SeetaCloud 容器），单卡跑 4 个后端，与任务书有偏差 |
+| 拓扑 | 4 副本各占一卡，逐 worker 隔离 | 单卡四后端，Ray Serve 代理 :8000 |
+| 轮次 | A / B1 / B2 / C / D 五轮 | A / B1 / B2 / C / D 多轮（`run_all_rounds.sh`，run-1 层级） |
+| 产出 | report.pdf（3 页）+ 作业感受 PDF + AI 使用说明 PDF + 主表（README 内） | report.pdf（6 页，含主表与分阶段分析）、`router_fallbacks.jsonl` 逐请求路由日志 |
 
-两版各自独立完成、互不覆盖；结论与主表详见各自 README 与 report.pdf。
+交付以 `ray-serve-4gpu/` 为准；`ray-serve-1gpu/` 保留作为单卡环境下的交叉验证（其 README
+第 7 节说明了单卡与四卡的不可直接比较之处）。
+
+> 这一步曾判断有误：本仓库早期 README 称「任务书只要求一个 HW2 zip」，据此删掉了
+> HW3 的交付 zip。核对第三关任务书原文后已恢复：任务书明确要求在 github 上传
+> `HW3-姓名（或学号）.zip` 且**解压后仅包含同名根目录**，现补齐并改为可脚本重建。
