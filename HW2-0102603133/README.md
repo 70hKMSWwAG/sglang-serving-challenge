@@ -1,57 +1,52 @@
-# HW2 - SGLang 前缀缓存测量与请求流程分析
+# HW2：第二次挑战（前缀缓存测量 + SGLang 请求流程阅读）
 
-## 环境与软件版本
-- OS: Ubuntu 24.04（2 vCPU / 7.4GB RAM，无 GPU，使用 CPU 推理）
-- Python 3.11.16
-- SGLang 0.5.14
-- Ray 2.56.0
-- 模型: Qwen/Qwen3-0.6B
-- vLLM 0.11.0（仅用于提供 `vllm._custom_ops` CPU 算子，--no-deps 安装）
+- GPU：4 × NVIDIA GeForce RTX 4090 D（24 GB）单机（AutoDL/SeetaCloud），驱动 580.105.08，CUDA 13.0
+- 软件：SGLang 0.5.14（torch 2.11.0+cu130、transformers 5.8.1，Python 3.12），Ray 2.56.0（本关未用到集群）
+- 模型：Qwen/Qwen3-0.6B，本地路径 `/root/autodl-tmp/models/Qwen3-0.6B`（hf-mirror 下载）
+- RadixCache 保持默认开启
 
 ## 安装方法
-```bash
-uv venv ~/sglenv --python 3.11
-source ~/sglenv/bin/activate
-uv pip install "sglang==0.5.14" "ray==2.56.0" huggingface_hub
-uv pip install "vllm==0.11.0" --no-deps   # CPU rotary/ops 支持
-```
-
-## 启动服务
-```bash
-python -m sglang.launch_server \
-  --model-path Qwen/Qwen3-0.6B \
-  --device cpu --attention-backend torch_native \
-  --mem-fraction-static 0.8 --watchdog-timeout 100000 \
-  --max-running-requests 8 \
-  --host 127.0.0.1 --port 30000
-```
-
-## 测量脚本（src/measure_prefix_cache.py）
-- 构造两组各 32 条请求：`dispersed_prefix`（每条请求前缀互不相同）与 `shared_prefix`（共享 256-token 前缀）；
-- 输入 512 tokens = 256 前缀 + 256 独有后缀，输出 16 tokens；
-- sampling_seed=2026, temperature=0, ignore_eos=true, 流式 `/generate` + input_ids；
-- 每组前先短请求预热 + POST /flush_cache，shared 组先发一条预热请求（不计入结果）；
-- 最大并发 8（ThreadPoolExecutor，同时受服务端 --max-running-requests 8 约束）。
 
 ```bash
-python src/measure_prefix_cache.py results/target1/myrun/prefix_cache.jsonl
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+python -m venv /root/autodl-tmp/envs/sgl
+/root/autodl-tmp/envs/sgl/bin/pip install ninja
+/root/autodl-tmp/envs/sgl/bin/pip install "sglang[all]==0.5.14" "torch==2.11.0" "transformers==5.8.1"
+HF_ENDPOINT=https://hf-mirror.com huggingface-cli download Qwen/Qwen3-0.6B \
+  --local-dir /root/autodl-tmp/models/Qwen3-0.6B
 ```
 
-## 回放命令
+## 启动与回放命令
+
 ```bash
-# 服务就绪后
-python src/measure_prefix_cache.py ~/hw2/results/target1/myrun/prefix_cache.jsonl
-python src/gen_pdfs.py hw2       # 重新生成 HW2 报告 PDF（含合并版 report.pdf）
+/root/autodl-tmp/envs/sgl/bin/python -m sglang.launch_server \
+  --model /root/autodl-tmp/models/Qwen3-0.6B --host 0.0.0.0 --port 30000
+
+# 目标一测量（共享前缀 / 分散前缀两组自动各跑一轮）
+/root/autodl-tmp/envs/sgl/bin/python src/target1/measure_prefix_cache.py \
+  --base-url http://127.0.0.1:30000 --output-dir results/target1
 ```
 
-## 结果目录与报告表格对应关系
-- `results/target1/dispersed_prefix/per_request.jsonl` — 分散前缀组逐请求记录
-- `results/target1/dispersed_prefix/summary.json` — 分散前缀组汇总
-- `results/target1/shared_prefix/per_request.jsonl` — 共享前缀组逐请求记录
-- `results/target1/shared_prefix/summary.json` — 共享前缀组汇总
-- `results/target1/comparison_table.json` — 两组对照表（report.pdf 任务一表格的数据来源：TTFT/TPOT/E2E p50、p95、命中率、实际 Prefill tokens）
-- `results/target1/task2_source_flow.md` — 任务二源码流程追踪文字稿
-- `task1_results.pdf` / `task2_flow.pdf` — 任务一/任务二分册
-- `作业感受.pdf` — 第二次挑战作业感受（三问）
-- `report.pdf` — 合订版报告（任务一 + 任务二 + AI 使用说明 + 作业感受）
-- `AI 使用说明情况（第二次挑战）.pdf` — 按作业要求命名
+脚本行为：两组各 32 条测量请求、最大并发 8，统一 temperature=0、max_new_tokens=16、
+ignore_eos=true、sampling_seed=2026，序列等长（1152 = 1024 前缀 + 128 后缀）；服务级预热
+→ 每组先等在飞结束并 POST /flush_cache 确认成功 → 共享前缀组再发 1 条预热请求载入公共前缀
+（不计入结果）→ 并发回放，从流式响应的 meta_info 解析 cached_tokens / prompt_tokens /
+completion_tokens / ttft / tpot。
+
+## 脚本用途
+
+| 脚本 | 作用 |
+| --- | --- |
+| `src/target1/measure_prefix_cache.py` | 目标一全部逻辑：构造两组负载、预热、flush、并发回放、逐请求 CSV 与汇总 JSON |
+
+## 结果目录与报告表格的对应关系
+
+```text
+results/target1/
+├── shared_prefix/       -> 报告 §2 主表「共享前缀组」列（requests.csv 逐请求, summary.json 汇总）
+├── dispersed_prefix/    -> 报告 §2 主表「分散前缀组」列（requests.csv 逐请求, summary.json 汇总）
+└── compare.json         -> 两组对照（命中率、prefill、TTFT/TPOT/端到端 p50/p95）
+```
+
+报告任务二的流程图与说明中的文件：行号，均在本机安装的 SGLang 0.5.14 源码
+（`site-packages/sglang/srt/...`）中用 grep 定位核对，可在同版本源码中逐一检索验证。

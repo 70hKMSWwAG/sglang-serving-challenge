@@ -1,0 +1,293 @@
+{
+  "schema_version": 2,
+  "run_name": "A_default_run1",
+  "policy": "serve",
+  "router_name": "p2c",
+  "max_ongoing_requests": 5,
+  "model": "Qwen/Qwen3-0.6B",
+  "workload_sha256": "f154ba954e28ca9612257edf5deb0d5dfc6bf27fd0115a701e1f49e52df75b03",
+  "max_in_flight": 2048,
+  "token_base": 4096,
+  "token_span": 60000,
+  "token_salt": 2026,
+  "expected_replicas": 4,
+  "expected_backends": 4,
+  "expected_nodes": 4,
+  "requests": 2048,
+  "successful": 2048,
+  "failed": 0,
+  "incomplete": 0,
+  "warmup_successful": 64,
+  "warmup_failed": 0,
+  "warmup_incomplete": 0,
+  "validation_errors": [],
+  "elapsed_s": 48.831558261066675,
+  "planned_duration_s": 29.538768,
+  "offered_rate_rps": 69.29876019202968,
+  "throughput_rps": 41.94009105854947,
+  "prompt_tokens_total": 3233280,
+  "cached_tokens_total": 2845827,
+  "computed_prefill_tokens_total": 387453,
+  "cache_hit_rate": 0.8801671986342042,
+  "ttft_s": {
+    "mean": 8.194496676677772,
+    "p50": 7.475578235462308,
+    "p95": 19.189934227615595,
+    "p99": 20.903517067432404
+  },
+  "tpot_s": {
+    "mean": 0.003061409697590482,
+    "p50": 0.0030569458902670594,
+    "p95": 0.0034500959794968367,
+    "p99": 0.0038120032598574958
+  },
+  "latency_s": {
+    "mean": 8.592236186162154,
+    "p50": 7.9040022268891335,
+    "p95": 19.556002197787166,
+    "p99": 21.148510636761785
+  },
+  "dispatch_lag_s": {
+    "mean": 0.0005797348521090561,
+    "p50": 0.00038441808736422445,
+    "p95": 0.001197220467567206,
+    "p99": 0.0021104944505694334
+  },
+  "client_queue_s": {
+    "mean": 0.00017659999321040232,
+    "p50": 0.00014090165495872498,
+    "p95": 0.0002821981906890869,
+    "p99": 0.00038023851811885834
+  },
+  "replica_distribution": {
+    "SGLang-0@Replica(id='zq2ck749', deployment='SGLangReplica', app='hw3')": 524,
+    "SGLang-1@Replica(id='swyarab3', deployment='SGLangReplica', app='hw3')": 506,
+    "SGLang-2@Replica(id='dllqlzei', deployment='SGLangReplica', app='hw3')": 500,
+    "SGLang-3@Replica(id='csexdyka', deployment='SGLangReplica', app='hw3')": 518
+  },
+  "node_distribution": {
+    "1abe32d70bd97400f6363e9fec9d4024d41e0273357e70976232c0c3": 524,
+    "456828355ff1421d2ee48f12310117754a7c8d031b745c205702079c": 506,
+    "aa1ab87413693cb302755d29ea30322945ca21b1014b9c5c032191e5": 500,
+    "b2696ab381b6ad32aa9090918f8928e2e55171a6c80af42128100ade": 518
+  },
+  "backend_distribution": {
+    "SGLang-0": 524,
+    "SGLang-1": 506,
+    "SGLang-2": 500,
+    "SGLang-3": 518
+  },
+  "backend_token_distribution": {
+    "SGLang-0": {
+      "requests": 524,
+      "input_tokens": 824960,
+      "cached_tokens": 720512,
+      "requested_output_tokens": 66112,
+      "output_tokens": 66112
+    },
+    "SGLang-1": {
+      "requests": 506,
+      "input_tokens": 800384,
+      "cached_tokens": 708608,
+      "requested_output_tokens": 68406,
+      "output_tokens": 68406
+    },
+    "SGLang-2": {
+      "requests": 500,
+      "input_tokens": 788608,
+      "cached_tokens": 695682,
+      "requested_output_tokens": 65981,
+      "output_tokens": 65981
+    },
+    "SGLang-3": {
+      "requests": 518,
+      "input_tokens": 819328,
+      "cached_tokens": 721025,
+      "requested_output_tokens": 68332,
+      "output_tokens": 68332
+    }
+  },
+  "warmup_replica_distribution": {
+    "SGLang-0@Replica(id='zq2ck749', deployment='SGLangReplica', app='hw3')": 9,
+    "SGLang-1@Replica(id='swyarab3', deployment='SGLangReplica', app='hw3')": 20,
+    "SGLang-2@Replica(id='dllqlzei', deployment='SGLangReplica', app='hw3')": 16,
+    "SGLang-3@Replica(id='csexdyka', deployment='SGLangReplica', app='hw3')": 19
+  },
+  "warmup_node_distribution": {
+    "1abe32d70bd97400f6363e9fec9d4024d41e0273357e70976232c0c3": 9,
+    "456828355ff1421d2ee48f12310117754a7c8d031b745c205702079c": 20,
+    "aa1ab87413693cb302755d29ea30322945ca21b1014b9c5c032191e5": 16,
+    "b2696ab381b6ad32aa9090918f8928e2e55171a6c80af42128100ade": 19
+  },
+  "warmup_backend_distribution": {
+    "SGLang-0": 9,
+    "SGLang-1": 20,
+    "SGLang-2": 16,
+    "SGLang-3": 19
+  },
+  "traffic_phases": {
+    "steady": {
+      "requests": 512,
+      "successful": 512,
+      "cache_hit_rate": 0.7676879343019583,
+      "ttft_s": {
+        "mean": 0.07814212320226943,
+        "p50": 0.044794145971536636,
+        "p95": 0.23478743247687817,
+        "p99": 0.42532189562916756
+      },
+      "latency_s": {
+        "mean": 0.4800042441820551,
+        "p50": 0.5320829078555107,
+        "p95": 0.7634075339883566,
+        "p99": 0.8938258197158575
+      },
+      "backend_distribution": {
+        "SGLang-0": 129,
+        "SGLang-1": 126,
+        "SGLang-2": 120,
+        "SGLang-3": 137
+      }
+    },
+    "burst": {
+      "requests": 1024,
+      "successful": 1024,
+      "cache_hit_rate": 0.9096027277773372,
+      "ttft_s": {
+        "mean": 8.216534992936431,
+        "p50": 7.800041690468788,
+        "p95": 17.629326310008764,
+        "p99": 20.58077073097229
+      },
+      "latency_s": {
+        "mean": 8.614141109776028,
+        "p50": 8.123693458735943,
+        "p95": 18.14948338828981,
+        "p99": 21.148510636761785
+      },
+      "backend_distribution": {
+        "SGLang-0": 255,
+        "SGLang-1": 250,
+        "SGLang-2": 264,
+        "SGLang-3": 255
+      }
+    },
+    "recovery": {
+      "requests": 512,
+      "successful": 512,
+      "cache_hit_rate": 0.9341496655849295,
+      "ttft_s": {
+        "mean": 16.26677459763596,
+        "p50": 17.067761911079288,
+        "p95": 19.678442711010575,
+        "p99": 21.309749830514193
+      },
+      "latency_s": {
+        "mean": 16.660658280914504,
+        "p50": 17.41845274530351,
+        "p95": 20.136497220024467,
+        "p99": 21.595598680898547
+      },
+      "backend_distribution": {
+        "SGLang-0": 140,
+        "SGLang-1": 130,
+        "SGLang-2": 116,
+        "SGLang-3": 126
+      }
+    }
+  },
+  "popularity_tiers": {
+    "warm": {
+      "requests": 480,
+      "successful": 480,
+      "cache_hit_rate": 0.8234203875315923,
+      "ttft_s": {
+        "mean": 7.888673879524382,
+        "p50": 6.853649016469717,
+        "p95": 19.175122478976846,
+        "p99": 20.364159408956766
+      },
+      "latency_s": {
+        "mean": 8.143724582802195,
+        "p50": 7.1307900454849005,
+        "p95": 19.343364536762238,
+        "p99": 20.489227287471294
+      },
+      "backend_distribution": {
+        "SGLang-0": 142,
+        "SGLang-1": 105,
+        "SGLang-2": 108,
+        "SGLang-3": 125
+      }
+    },
+    "hot": {
+      "requests": 560,
+      "successful": 560,
+      "cache_hit_rate": 0.9260233918128655,
+      "ttft_s": {
+        "mean": 8.406857400131411,
+        "p50": 7.923644518479705,
+        "p95": 19.217478742823005,
+        "p99": 20.943224294111133
+      },
+      "latency_s": {
+        "mean": 8.72493618728726,
+        "p50": 8.250283213332295,
+        "p95": 19.50714521110058,
+        "p99": 21.308389058336616
+      },
+      "backend_distribution": {
+        "SGLang-0": 143,
+        "SGLang-1": 143,
+        "SGLang-2": 145,
+        "SGLang-3": 129
+      }
+    },
+    "superhot": {
+      "requests": 768,
+      "successful": 768,
+      "cache_hit_rate": 0.95656494140625,
+      "ttft_s": {
+        "mean": 8.19647201816891,
+        "p50": 7.563491886481643,
+        "p95": 19.175467835739255,
+        "p99": 20.972187619656324
+      },
+      "latency_s": {
+        "mean": 8.759561004129258,
+        "p50": 8.060429107397795,
+        "p95": 19.74980403855443,
+        "p99": 21.58612784743309
+      },
+      "backend_distribution": {
+        "SGLang-0": 178,
+        "SGLang-1": 203,
+        "SGLang-2": 186,
+        "SGLang-3": 201
+      }
+    },
+    "cold": {
+      "requests": 240,
+      "successful": 240,
+      "cache_hit_rate": 0.6339688041594455,
+      "ttft_s": {
+        "mean": 8.304312823487756,
+        "p50": 7.357301155105233,
+        "p95": 19.189934227615595,
+        "p99": 20.929659955203533
+      },
+      "latency_s": {
+        "mean": 8.64418663942876,
+        "p50": 7.716693248599768,
+        "p95": 19.4095303080976,
+        "p99": 21.123487889766693
+      },
+      "backend_distribution": {
+        "SGLang-0": 61,
+        "SGLang-1": 55,
+        "SGLang-2": 61,
+        "SGLang-3": 63
+      }
+    }
+  }
+}

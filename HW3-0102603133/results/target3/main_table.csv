@@ -1,0 +1,6 @@
+group,router,max_ongoing_requests,successful,failed,throughput_rps,cache_hit_rate,actual_prefill_tokens,ttft_p50_s,ttft_p95_s,tpot_p95_s,latency_p50_s,latency_p95_s,dispatch_lag_p95_s,client_queue_p95_s,backend_distribution,validation_errors
+A,p2c,5,2048,0,41.94,0.8802,387453,7.4756,19.1899,0.0035,7.904,19.556,0.0012,0.0003,SGLang-0=524;SGLang-1=506;SGLang-2=500;SGLang-3=518,
+B1,p2c,16,2048,0,63.313,0.8789,391424,1.6833,4.3673,0.0057,2.2926,4.9943,0.0011,0.0003,SGLang-0=488;SGLang-1=511;SGLang-2=522;SGLang-3=527,
+B2,p2c,32,2048,0,50.686,0.8783,393597,3.9556,10.1283,0.0185,6.2657,12.3029,0.0012,0.0003,SGLang-0=470;SGLang-1=514;SGLang-2=527;SGLang-3=537,
+C,consistent_hash,16,2048,0,30.979,0.9578,136444,1.354,40.3841,0.0048,1.8393,41.0444,0.0018,0.0003,SGLang-0=1280;SGLang-1=267;SGLang-2=303;SGLang-3=198,
+D,affinity_load,16,2048,0,62.991,0.8859,369024,1.2783,5.9291,0.0059,1.9099,6.6306,0.0013,0.0003,SGLang-0=492;SGLang-1=539;SGLang-2=490;SGLang-3=527,

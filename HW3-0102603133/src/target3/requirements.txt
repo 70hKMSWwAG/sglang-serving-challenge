@@ -1,0 +1,3 @@
+ray[serve]==2.56.0
+httpx>=0.27
+aiohttp>=3.9
