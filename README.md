@@ -34,8 +34,8 @@
 │   ├── env-sandbox/              #   ② 云沙箱复跑存档
 │   └── env-cloud/                #   ③ 云主机存档
 ├── HW3/                          # 第三关：Ray Serve 路由对比（A/B/C/D）与改进
-│   ├── ray-serve-1gpu/           #   单卡 4090D（SeetaCloud）主版本，含全套脚本与 router 日志
-│   └── ray-serve-4gpu/           #   4 卡 4090D（AutoDL）版本，含作业感受与 AI 使用说明 PDF
+│   ├── ray-serve-1gpu/           #   单卡 4090D（SeetaCloud）交叉验证版，非交付，含全套脚本与 router 日志
+│   └── ray-serve-4gpu/           #   4 卡 4090D（AutoDL）【最终交付】，含作业感受与 AI 使用说明 PDF
 ├── envs/                         # 环境级辅助资产（不属于单个作业）
 │   ├── wsl/                      #   ① WSL 一键复现脚本
 │   ├── evidence/                 #   ① 运行证据（日志/截图）
