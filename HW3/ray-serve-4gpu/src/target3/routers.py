@@ -7,15 +7,15 @@ Signals (current request + current service state only):
   - each replica's configured max_ongoing_requests
 
 Rule:
-  1. Primary replica = stable hash of the session id, so requests of one
-     prefix family stick to one replica and reuse its RadixCache.
-  2. If the primary is hot (in_flight >= hot_fraction * max_ongoing), it is
-     demoted: replicas are ranked by ascending in-flight and the primary goes
-     last, so hot-replica requests spill to cooler replicas instead of
-     queueing behind them. The threshold is deliberately high (0.9):
-     spilling too early destroys prefix affinity and costs more prefill.
-  3. Ranks are returned individually; if a replica rejects under Serve's
-     admission control, the next rank is tried, giving a final safety net.
+  1. Primary replica = stable blake2b hash of the session id, so requests of
+     one prefix family stick to one replica and reuse its RadixCache.
+  2. If the primary's in-flight count < hot_fraction * max_ongoing_requests
+     (hot_fraction defaults to 0.5), return [[primary]]: strict prefix affinity.
+  3. Otherwise the primary is hot: return a single rank [[spill, primary]],
+     where spill is the currently least-loaded other replica. Serve probes both
+     in that rank and picks the shorter queue, so hot-family requests overflow
+     to a cooler replica. (Returning them as separate ranks makes Serve try them
+     one at a time, which stalled the proxy under load; see README.)
 """
 
 import hashlib
