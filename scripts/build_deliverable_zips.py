@@ -16,7 +16,8 @@ src/ / results/。本脚本据此生成：
 
 运行：
     python scripts/build_deliverable_zips.py            # 生成 HW3 交付包
-    python scripts/build_deliverable_zips.py --all      # 同时生成 HW2 包
+
+HW2-0102603133.zip 是 10-03 截止前提交的原版（提交 692995f），已冻结，本脚本不再重建它。
 """
 import argparse
 import os
@@ -28,9 +29,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JOBS = [
     ("HW3-0102603133.zip", os.path.join(ROOT, "HW3", "ray-serve-4gpu"), "HW3-0102603133"),
 ]
-EXTRA_JOBS = [
-    ("HW2-0102603133.zip", os.path.join(ROOT, "HW2", "env-wsl"), ""),
-]
+EXTRA_JOBS = []  # HW2 包已冻结（截止前原版），不再由脚本生成
 
 SKIP_DIRS = {"__pycache__", ".ipynb_checkpoints", ".git"}
 SKIP_SUFFIX = {".pyc", ".pyo"}
@@ -55,7 +54,7 @@ def build(zip_name: str, src_dir: str, top_dir: str) -> None:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--all", action="store_true", help="同时生成 HW2 交付包")
+    ap.add_argument("--all", action="store_true", help="（已停用）HW2 包已冻结，不再生成")
     args = ap.parse_args()
     jobs = JOBS + (EXTRA_JOBS if args.all else [])
     for zip_name, src, top in jobs:
