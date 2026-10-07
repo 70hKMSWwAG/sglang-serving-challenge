@@ -6,7 +6,7 @@
 
 ## GPU 与软件版本
 
-- GPU：4 × NVIDIA GeForce RTX 4090 D（24 GB），单机，驱动 580.105.08，CUDA 13.0（AutoDL/SeetaCloud 北京 B2 区）
+- GPU：4 × NVIDIA GeForce RTX 4090 D（24 GB），单机，驱动 580.105.08，CUDA 13.0（AutoDL 北京 B2 区）
 - SGLang 后端环境：`/root/autodl-tmp/envs/sgl`（Python 3.11）
   - `sglang[all]==0.5.14`，`torch==2.11.0+cu130`，`transformers==5.8.1`，`ninja`
 - Ray Serve 环境：`/root/autodl-tmp/envs/rayenv`（Python 3.11）
