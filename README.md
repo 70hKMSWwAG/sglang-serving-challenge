@@ -17,7 +17,7 @@
 > **第三关交付包**：根目录 [`HW3-0102603133.zip`](HW3-0102603133.zip)，解压后仅含同名
 > 根目录（`README.md` / `report.pdf` / `AI 使用说明情况（第三次挑战）.pdf` /
 > 作业感受 PDF / `src/{target1,target3}` / `results/{target1,target3}`），符合任务书交付格式。
-> 需要重新打包时运行 `python scripts/build_deliverable_zips.py`；加 `--all` 可一并生成 HW2 包。
+> 需要重新打包时运行 `python scripts/build_deliverable_zips.py`。HW2 包为截止前原版，已冻结，脚本不会重建。
 >
 > **第二关交付包**：根目录 [`HW2-0102603133.zip`](HW2-0102603133.zip)，为 10-03 截止前提交的原版（提交 `692995f`，内容对应 `HW2/env-wsl/`），解压后仅含同名根目录。
 
