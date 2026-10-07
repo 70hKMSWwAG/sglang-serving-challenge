@@ -15,5 +15,3 @@ tools/ 说明（仅 1gpu 版）：
 
 - `tools/report/`：`build_report.py` 直接从 `summary.json` / `requests.csv`
   读取数据生成 `report.html`（报告数字与原始结果不会漂移），含模板与 AI 披露页源码；
-- `tools/remote-relay/`：实验期间使用的远程联调脚本（GitHub 仓库命令下行 + ntfy 上行），
-  与实验结论无关，留作过程记录。
