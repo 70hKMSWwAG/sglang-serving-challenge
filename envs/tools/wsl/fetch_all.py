@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
+r"""
 Windows 侧预取：把 WSL 构建/运行所需的一切大文件先下到 D:\first-task\work\
 目的：WSL 内 GitHub 很可能被 Watt Toolkit 劫持（hosts -> 127.0.0.1）或 TLS 受阻，
       预先落地后 WSL 侧完全离线可用。
